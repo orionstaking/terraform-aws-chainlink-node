@@ -72,6 +72,12 @@ module "chainlink_node" {
 
 ## Notes
 
+### UI Access
+
+Chainlink user interface port (6688 by default) is open only to the VPC CIDR block cause TLS support ins't supported yet by current module. In order to access the UI it's required to open a SSH tunnel to any available host/bastion in the VPC.
+
+Example: `ssh -i $KEY ${USER}@${VPC_HOST_PUBLIC_IP} -L 6688:${NLB_ENDPOINT}:6688 -N`
+
 ### Secrets
 
 Module is required the following AWS Secrets Manager secrets created and set:
