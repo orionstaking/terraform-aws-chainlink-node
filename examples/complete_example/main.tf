@@ -116,3 +116,14 @@ module "chainlink_node" {
     DATABASE_LOCKING_MODE               = "lease"
   }
 }
+
+# Example: allow access to 6688 port of NLB to grab prometheus metrics (do not use for UI login without TLS enabled)
+# resource "aws_security_group_rule" "ingress_allow_ui" {
+#   type        = "ingress"
+#   from_port   = "6688"
+#   to_port     = "6688"
+#   protocol    = "tcp"
+#   cidr_blocks = [var.your]
+
+#   security_group_id = module.chainlink_node.nlb_security_group_id
+# }
