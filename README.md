@@ -27,8 +27,7 @@ Full example [here](https://github.com/orionterra/terraform-aws-chainlink-node/t
 
 ```hcl
 module "chainlink_node" {
-  source  = "orionterra/chainlink-node/aws"
-  version = "1.1.0"
+  source  = "ChainOrion/chainlink-node/aws"
 
   project     = local.project
   environment = local.environment
