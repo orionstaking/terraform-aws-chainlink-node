@@ -93,9 +93,9 @@ Example: `ssh -i $KEY ${USER}@${VPC_HOST_PUBLIC_IP} -L 6688:${NLB_ENDPOINT}:6688
 
 Module is required the following AWS Secrets Manager secrets created and set:
 
-- Secret that contain Keystore password (plain text, one line)
-- Secret that contain API credentials (plain text, two lines)
-- Secret that contain value for DATABASE_URL (plain text, one line)
+- Secret that contain Keystore password (base64)
+- Secret that contain API credentials (base64)
+- Secret that contain value for DATABASE_URL environment variable (base64)
 
 Deploy order:
 
@@ -209,6 +209,7 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_nlb_endpoint"></a> [nlb\_endpoint](#output\_nlb\_endpoint) | NLB endpoint to accsess Chainlink Node UI. UI port is open only to the VPC CIDR block, in order to access the UI it's required to open SSH tunnel to any available host/bastion in the VPC. More info in Readme.md |
+| <a name="output_nlb_security_group_id"></a> [nlb\_security\_group\_id](#output\_nlb\_security\_group\_id) | ID of security group attached to NLB. It's possible to use it to configure additional sg inbound rules |
 | <a name="output_node_config"></a> [node\_config](#output\_node\_config) | Chainlink node configuration environment variables |
 | <a name="output_subnet_mapping"></a> [subnet\_mapping](#output\_subnet\_mapping) | A map of values required to enable failover between AZs |
 <!-- END_TF_DOCS -->
