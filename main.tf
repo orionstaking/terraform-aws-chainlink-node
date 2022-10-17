@@ -33,7 +33,7 @@ resource "aws_ecs_task_definition" "this" {
     {
       project           = var.project
       environment       = var.environment
-      docker_image      = "smartcontract/chainlink:${var.node_version}-nonroot"
+      docker_image      = "smartcontract/chainlink:${var.node_version}"
       aws_region        = var.aws_region
       port_ui           = var.chainlink_ui_port
       port_node         = var.chainlink_node_port

@@ -12,7 +12,6 @@ provider "aws" {
       Project     = local.project
       Chains      = "Ethereum"
       TF_MANAGED  = "true"
-      TF_VERSION  = "1.1.7"
       TF_SERVICE  = "chainlink_node"
     }
   }
@@ -80,7 +79,7 @@ module "chainlink_node" {
   api_credentials_secret_arn   = aws_secretsmanager_secret.api.arn
   database_url_secret_arn      = aws_secretsmanager_secret.db.arn
 
-  node_version        = "1.5.1"
+  node_version        = "1.9.0"
   task_cpu            = 1024
   task_memory         = 2048
   chainlink_node_port = 14666
