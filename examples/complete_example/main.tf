@@ -35,20 +35,20 @@ module "vpc" {
 
 # AWS SecretsManager objects for Chainlink Node
 resource "aws_secretsmanager_secret" "keystore" {
-  name        = "${local.project}/${local.environment}/node/keystore_password"
-  description = "Keystore password for ${local.project}-${local.environment} project"
+  name                    = "${local.project}/${local.environment}/node/keystore_password"
+  description             = "Keystore password for ${local.project}-${local.environment} project"
   recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret" "api" {
-  name        = "${local.project}/${local.environment}/node/api_credentials"
-  description = "API credentials for ${local.project}-${local.environment} project"
+  name                    = "${local.project}/${local.environment}/node/api_credentials"
+  description             = "API credentials for ${local.project}-${local.environment} project"
   recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret" "db" {
-  name        = "${local.project}/${local.environment}/node/database_url"
-  description = "API credentials for ${local.project}-${local.environment} project"
+  name                    = "${local.project}/${local.environment}/node/database_url"
+  description             = "API credentials for ${local.project}-${local.environment} project"
   recovery_window_in_days = 0
 }
 
@@ -84,13 +84,13 @@ module "chainlink_node" {
   task_memory         = 2048
   chainlink_node_port = 14666
   chainlink_ui_port   = 6688
-  subnet_mapping      = {
-    "${module.vpc.azs[0]}" = {
+  subnet_mapping = {
+    (module.vpc.azs[0]) = {
       ip            = aws_eip.chainlink_p2p[module.vpc.azs[0]].public_ip
       subnet_id     = module.vpc.public_subnets[0]
       allocation_id = aws_eip.chainlink_p2p[module.vpc.azs[0]].id
     }
-    "${module.vpc.azs[1]}" = {
+    (module.vpc.azs[1]) = {
       ip            = aws_eip.chainlink_p2p[module.vpc.azs[1]].public_ip
       subnet_id     = module.vpc.public_subnets[1]
       allocation_id = aws_eip.chainlink_p2p[module.vpc.azs[1]].id
