@@ -43,18 +43,19 @@ module "chainlink_node" {
   api_credentials_secret_arn   = aws_secretsmanager_secret.api.arn
   database_url_secret_arn      = aws_secretsmanager_secret.db.arn
 
-  node_version        = "1.5.1"
+  # Always check latest versions
+  node_version        = "1.10.0"
   task_cpu            = 1024
   task_memory         = 2048
   chainlink_node_port = 14666
   chainlink_ui_port   = 6688
   subnet_mapping      = {
-    "${module.vpc.azs[0]}" = {
+    (module.vpc.azs[0]) = {
       ip            = aws_eip.chainlink_p2p[module.vpc.azs[0]].public_ip
       subnet_id     = module.vpc.public_subnets[0]
       allocation_id = aws_eip.chainlink_p2p[module.vpc.azs[0]].id
     }
-    "${module.vpc.azs[1]}" = {
+    (module.vpc.azs[1]) = {
       ip            = aws_eip.chainlink_p2p[module.vpc.azs[1]].public_ip
       subnet_id     = module.vpc.public_subnets[1]
       allocation_id = aws_eip.chainlink_p2p[module.vpc.azs[1]].id
