@@ -18,7 +18,7 @@ resource "aws_lb" "this" {
 
 resource "aws_lb_target_group" "ui" {
   name                 = "chainlink-${var.environment}-ui"
-  port                 = var.chainlink_ui_port
+  port                 = var.tls_ui_enabled && var.tls_type == "import" ? var.tls_chainlink_ui_port : var.chainlink_ui_port
   protocol             = "TCP"
   target_type          = "ip"
   vpc_id               = var.vpc_id
@@ -28,7 +28,7 @@ resource "aws_lb_target_group" "ui" {
   health_check {
     enabled             = true
     path                = "/health"
-    port                = "traffic-port"
+    port                = var.chainlink_ui_port
     healthy_threshold   = 2
     unhealthy_threshold = 2
     interval            = 10
@@ -58,7 +58,7 @@ resource "aws_lb_target_group" "node" {
 
 resource "aws_lb_listener" "ui" {
   load_balancer_arn = aws_lb.this.arn
-  port              = var.chainlink_ui_port
+  port              = var.tls_ui_enabled && var.tls_type == "import" ? var.tls_chainlink_ui_port : var.chainlink_ui_port
   protocol          = "TCP"
 
   default_action {

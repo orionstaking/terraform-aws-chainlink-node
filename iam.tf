@@ -36,6 +36,22 @@ data "aws_iam_policy_document" "this" {
       var.database_url_secret_arn
     ]
   }
+
+  dynamic "statement" {
+    for_each = var.tls_ui_enabled && var.tls_type == "import" ? ["tls"] : [] 
+
+    content {
+      effect = "Allow"
+      actions = [
+        "secretsmanager:GetSecretValue",
+        "kms:Decrypt"
+      ]
+      resources = [
+        var.tls_cert_secret_arn,
+        var.tls_key_secret_arn
+      ]
+    }
+  }
 }
 
 resource "aws_iam_policy" "this" {

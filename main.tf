@@ -36,12 +36,16 @@ resource "aws_ecs_task_definition" "this" {
       docker_image      = "smartcontract/chainlink:${var.node_version}"
       aws_region        = var.aws_region
       port_ui           = var.chainlink_ui_port
+      tls_port_ui       = var.tls_chainlink_ui_port
       port_node         = var.chainlink_node_port
       cpu               = var.task_cpu
       memory            = var.task_memory
       keystore_password = var.keystore_password_secret_arn
       api_credentials   = var.api_credentials_secret_arn
       database_url      = var.database_url_secret_arn
+      tls_cert          = var.tls_cert_secret_arn
+      tls_key           = var.tls_key_secret_arn
+      https_ui_enabled  = var.tls_ui_enabled && var.tls_type == "import" ? "true" : "false"
       node_config       = local.node_config
       subnet_mapping    = base64encode(jsonencode(var.subnet_mapping))
       init_script       = replace(file("${path.module}/templates/init_script.sh.tpl"), "\n", " && ")
@@ -69,7 +73,7 @@ resource "aws_ecs_service" "this" {
   load_balancer {
     target_group_arn = aws_lb_target_group.ui.arn
     container_name   = "${var.project}-${var.environment}-node"
-    container_port   = var.chainlink_ui_port
+    container_port   = var.tls_ui_enabled && var.tls_type == "import" ? var.tls_chainlink_ui_port : var.chainlink_ui_port
   }
 
   load_balancer {
