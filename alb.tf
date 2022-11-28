@@ -16,9 +16,31 @@ resource "aws_lb" "this" {
   }
 }
 
+resource "random_string" "alb_prefix_ui" {
+  keepers = {
+    # Generate a new id each time we change chainlink_ui_port
+    port = var.tls_ui_enabled && var.tls_type == "import" ? var.tls_chainlink_ui_port : var.chainlink_ui_port
+  }
+
+  length  = 4
+  upper   = false
+  special = false
+}
+
+resource "random_string" "alb_prefix_node" {
+  keepers = {
+    # Generate a new id each time we change chainlink_node_port
+    port = var.chainlink_node_port
+  }
+
+  length  = 4
+  upper   = false
+  special = false
+}
+
 resource "aws_lb_target_group" "ui" {
-  name                 = "chainlink-${var.environment}-ui"
-  port                 = var.chainlink_ui_port
+  name                 = "chainlink-${var.environment}-ui-${random_string.alb_prefix_ui.result}"
+  port                 = var.tls_ui_enabled && var.tls_type == "import" ? var.tls_chainlink_ui_port : var.chainlink_ui_port
   protocol             = "TCP"
   target_type          = "ip"
   vpc_id               = var.vpc_id
@@ -28,16 +50,20 @@ resource "aws_lb_target_group" "ui" {
   health_check {
     enabled             = true
     path                = "/health"
-    port                = "traffic-port"
+    port                = var.chainlink_ui_port
     healthy_threshold   = 2
     unhealthy_threshold = 2
     interval            = 10
     protocol            = "HTTP"
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_lb_target_group" "node" {
-  name                 = "chainlink-${var.environment}-node"
+  name                 = "chainlink-${var.environment}-node-${random_string.alb_prefix_node.result}"
   port                 = var.chainlink_node_port
   protocol             = "TCP"
   target_type          = "ip"
@@ -54,11 +80,15 @@ resource "aws_lb_target_group" "node" {
     interval            = 10
     protocol            = "HTTP"
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_lb_listener" "ui" {
   load_balancer_arn = aws_lb.this.arn
-  port              = var.chainlink_ui_port
+  port              = var.tls_ui_enabled && var.tls_type == "import" ? var.tls_chainlink_ui_port : var.chainlink_ui_port
   protocol          = "TCP"
 
   default_action {

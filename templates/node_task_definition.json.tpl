@@ -10,6 +10,12 @@
         "containerPort": ${port_ui},
         "hostPort": ${port_ui}
       },
+      %{ if tls_ui_enabled == "true" }
+      {
+        "containerPort": ${tls_port_ui},
+        "hostPort": ${tls_port_ui}
+      },
+      %{ endif }
       {
         "containerPort": ${port_node},
         "hostPort": ${port_node}
@@ -21,9 +27,12 @@
       %{~ for definition in node_config ~}
       { "name" : "${definition.name}", "value" : "${definition.value}" },
       %{~ endfor ~}
+      { "name" : "CHAINLINK_PORT", "value" : "${port_ui}" },
+      { "name" : "TLS_UI_ENABLED", "value" : "${tls_ui_enabled}" },
+      { "name" : "CHAINLINK_TLS_PORT", "value" : "${tls_port_ui}" },
       { "name" : "P2P_ANNOUNCE_PORT", "value" : "${port_node}" },
       { "name" : "P2P_LISTEN_PORT", "value" : "${port_node}" },
-      { "name" : "JSON_CONSOLE", "value" : "true"},
+      { "name" : "JSON_CONSOLE", "value" : "true" },
       { "name" : "SUBNET_MAP", "value" : "${subnet_mapping}" }
     ],
     "secrets": [
@@ -31,6 +40,16 @@
         "name": "KEYSTORE_PASSWORD",
         "valueFrom": "${keystore_password}"
       },
+      %{ if tls_ui_enabled == "true" }
+      {
+        "name": "TLS_CERT",
+        "valueFrom": "${tls_cert}"
+      },
+      {
+        "name": "TLS_KEY",
+        "valueFrom": "${tls_key}"
+      },
+      %{ endif }
       {
         "name": "API_CREDENTIALS",
         "valueFrom": "${api_credentials}"
