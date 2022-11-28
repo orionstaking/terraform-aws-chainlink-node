@@ -45,7 +45,7 @@ resource "aws_ecs_task_definition" "this" {
       database_url      = var.database_url_secret_arn
       tls_cert          = var.tls_cert_secret_arn
       tls_key           = var.tls_key_secret_arn
-      https_ui_enabled  = var.tls_ui_enabled && var.tls_type == "import" ? "true" : "false"
+      tls_ui_enabled    = var.tls_ui_enabled && var.tls_type == "import" ? "true" : "false"
       node_config       = local.node_config
       subnet_mapping    = base64encode(jsonencode(var.subnet_mapping))
       init_script       = replace(file("${path.module}/templates/init_script.sh.tpl"), "\n", " && ")

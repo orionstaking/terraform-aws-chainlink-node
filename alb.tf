@@ -16,8 +16,30 @@ resource "aws_lb" "this" {
   }
 }
 
+resource "random_string" "alb_prefix_ui" {
+  keepers = {
+    # Generate a new id each time we change chainlink_ui_port
+    port = var.tls_ui_enabled && var.tls_type == "import" ? var.tls_chainlink_ui_port : var.chainlink_ui_port
+  }
+
+  length  = 4
+  upper   = false
+  special = false
+}
+
+resource "random_string" "alb_prefix_node" {
+  keepers = {
+    # Generate a new id each time we change chainlink_node_port
+    port = var.chainlink_node_port
+  }
+
+  length  = 4
+  upper   = false
+  special = false
+}
+
 resource "aws_lb_target_group" "ui" {
-  name                 = "chainlink-${var.environment}-ui"
+  name                 = "chainlink-${var.environment}-ui-${random_string.alb_prefix_ui.result}"
   port                 = var.tls_ui_enabled && var.tls_type == "import" ? var.tls_chainlink_ui_port : var.chainlink_ui_port
   protocol             = "TCP"
   target_type          = "ip"
@@ -34,10 +56,14 @@ resource "aws_lb_target_group" "ui" {
     interval            = 10
     protocol            = "HTTP"
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_lb_target_group" "node" {
-  name                 = "chainlink-${var.environment}-node"
+  name                 = "chainlink-${var.environment}-node-${random_string.alb_prefix_node.result}"
   port                 = var.chainlink_node_port
   protocol             = "TCP"
   target_type          = "ip"
@@ -53,6 +79,10 @@ resource "aws_lb_target_group" "node" {
     unhealthy_threshold = 2
     interval            = 10
     protocol            = "HTTP"
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 

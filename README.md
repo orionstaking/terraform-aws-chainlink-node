@@ -97,6 +97,8 @@ Module is required the following AWS Secrets Manager secrets created and set:
 - Secret that contain Keystore password (base64)
 - Secret that contain API credentials (base64)
 - Secret that contain value for DATABASE_URL environment variable (base64)
+- Secret that contain TLS_CERT (base64) (optional, based on `tls_ui_enabled` and `tls_type` terraform variables)
+- Secret that contain TLS_KEY (base64) (oprional, based on `tls_ui_enabled` and `tls_type` terraform variables)
 
 Deploy order:
 
@@ -116,6 +118,10 @@ It's possible to specify any environment variable from https://docs.chain.link/d
 - CLIENT_NODE_URL (this variable will be set from `chainlink_ui_port` terraform module variable)
 - DATABASE_URL (this variable will be set from AWS Secrets Manager object using `database_url_secret_arn` terraform module variable)
 - JSON_CONSOLE (this variable will be set to `true` in order to have an ability to use AWS CloudWatch metrics filter)
+- TLS_CERT_PATH (during Fargate container startup, init script will set this variable based on `tls_ui_enabled` and `tls_type` terraform variables)
+- TLS_KEY_PATH (during Fargate container startup, init script will set this variable based on `tls_ui_enabled` and `tls_type` terraform variables)
+- SECURE_COOKIES (during Fargate container startup, init script will set this variable based on `tls_ui_enabled` and `tls_type` terraform variables)
+- CHAINLINK_TLS_PORT (during Fargate container startup, init script will set this variable based on `tls_ui_enabled`, `tls_type`, and `tls_chainlink_ui_port` terraform variables)
 
 Check example [here](https://github.com/orionterra/terraform-aws-chainlink-node/tree/main/examples/complete_example).
 
@@ -124,6 +130,12 @@ Check example [here](https://github.com/orionterra/terraform-aws-chainlink-node/
 Chainlink Node failover is realized using `subnet_mapping` terraform module variable and AWS Network Load Balancer. `P2P_ANNOUNCE_IP` environment variable is defined based on the AWS availability zone in which node container are running. In case of one of AWS availability zone failure, Fargate will drain node container in one az and run a new one in another based on NLB target group health checks.
 
 Check example with properly set `subnet_mapping` terraform module variable [here](https://github.com/orionterra/terraform-aws-chainlink-node/tree/main/examples/complete_example).
+
+### TLS Support
+
+ATM, module supports imported TLS as described [here](https://docs.chain.link/chainlink-nodes/enabling-https-connections). AWS ACM ('acm') isn't supported yet.
+
+Check example with imported TLS configuration [here](https://github.com/orionterra/terraform-aws-chainlink-node/tree/main/examples/imported_tls_example)
 
 ### Notifications
 
@@ -148,6 +160,7 @@ Create AWS Secrets Manager objects first by commenting out the section with modu
 | Name | Version |
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.12.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | n/a |
 
 ## Modules
 
@@ -179,20 +192,22 @@ No modules.
 | [aws_security_group_rule.ingress_allow_node](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [aws_security_group_rule.ingress_allow_ui](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [aws_sns_topic.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic) | resource |
+| [random_string.alb_prefix_node](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
+| [random_string.alb_prefix_ui](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [aws_iam_policy_document.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_api_credentials_secret_arn"></a> [api\_credentials\_secret\_arn](#input\_api\_credentials\_secret\_arn) | ARN of the Secrets Manager Secret in the same AWS account and Region that contains the API credentials for the chainlink node | `string` | n/a | yes |
+| <a name="input_api_credentials_secret_arn"></a> [api\_credentials\_secret\_arn](#input\_api\_credentials\_secret\_arn) | ARN of the Secrets Manager Secret in the same AWS account and Region that contains the API credentials for the chainlink node. Value of AWS SM object must be base64 encoded | `string` | n/a | yes |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | AWS account id. Used to add alarms to dashboard | `string` | n/a | yes |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS Region (required for CloudWatch logs configuration) | `string` | n/a | yes |
 | <a name="input_chainlink_node_port"></a> [chainlink\_node\_port](#input\_chainlink\_node\_port) | P2P\_ANNOUNCE\_PORT from the chainlink OCR node config. More info here: https://docs.chain.link/docs/configuration-variables/#networking-stack-v1 | `number` | n/a | yes |
 | <a name="input_chainlink_ui_port"></a> [chainlink\_ui\_port](#input\_chainlink\_ui\_port) | CHAINLINK\_PORT from the chainlink OCR node config. More info here: https://docs.chain.link/docs/configuration-variables/#chainlink_port | `number` | `6688` | no |
-| <a name="input_database_url_secret_arn"></a> [database\_url\_secret\_arn](#input\_database\_url\_secret\_arn) | ARN of the Secrets Manager Secret in the same AWS account and Region that contains the database URL for the chainlink node | `string` | n/a | yes |
+| <a name="input_database_url_secret_arn"></a> [database\_url\_secret\_arn](#input\_database\_url\_secret\_arn) | ARN of the Secrets Manager Secret in the same AWS account and Region that contains the database URL for the chainlink node. Value of AWS SM object must be base64 encoded | `string` | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name | `string` | `"nonprod"` | no |
-| <a name="input_keystore_password_secret_arn"></a> [keystore\_password\_secret\_arn](#input\_keystore\_password\_secret\_arn) | ARN of the Secrets Manager Secret in the same AWS account and Region that contains the keystore password for the chainlink node | `string` | n/a | yes |
+| <a name="input_keystore_password_secret_arn"></a> [keystore\_password\_secret\_arn](#input\_keystore\_password\_secret\_arn) | ARN of the Secrets Manager Secret in the same AWS account and Region that contains the keystore password for the chainlink node. Value of AWS SM object must be base64 encoded | `string` | n/a | yes |
 | <a name="input_monitoring_enabled"></a> [monitoring\_enabled](#input\_monitoring\_enabled) | Defines whether to create CloudWatch dashboard and custom metrics or not | `bool` | `true` | no |
 | <a name="input_node_config"></a> [node\_config](#input\_node\_config) | Chainlink node configuration environment variables. The full list could be found here: https://docs.chain.link/docs/configuration-variables/ | `map(any)` | n/a | yes |
 | <a name="input_node_version"></a> [node\_version](#input\_node\_version) | Chainlink node version. The latest version could be found here: https://hub.docker.com/r/smartcontract/chainlink/tags | `string` | n/a | yes |
@@ -201,6 +216,11 @@ No modules.
 | <a name="input_subnet_mapping"></a> [subnet\_mapping](#input\_subnet\_mapping) | A map of values required to enable failover between AZs. See an example in ./examples directory | `map(any)` | n/a | yes |
 | <a name="input_task_cpu"></a> [task\_cpu](#input\_task\_cpu) | Allocated CPU for chainlink node container | `number` | `2048` | no |
 | <a name="input_task_memory"></a> [task\_memory](#input\_task\_memory) | Allocated Memory for chainlink node container | `number` | `4096` | no |
+| <a name="input_tls_cert_secret_arn"></a> [tls\_cert\_secret\_arn](#input\_tls\_cert\_secret\_arn) | ARN of the Secrets Manager Secret in the same AWS account and Region that contains the TLS certificate. Required when `tls_ui_enabled`=`true` and `tls_type`=`import`. Value of AWS SM object must be base64 encoded | `string` | `""` | no |
+| <a name="input_tls_chainlink_ui_port"></a> [tls\_chainlink\_ui\_port](#input\_tls\_chainlink\_ui\_port) | CHAINLINK\_TLS\_PORT from the chainlink OCR node config. More info here: https://docs.chain.link/chainlink-nodes/configuration-variables#chainlink_tls_port | `number` | `6689` | no |
+| <a name="input_tls_key_secret_arn"></a> [tls\_key\_secret\_arn](#input\_tls\_key\_secret\_arn) | ARN of the Secrets Manager Secret in the same AWS account and Region that contains the TLS key. Required when `tls_ui_enabled`=`true` and `tls_type`=`import`. Value of AWS SM object must be base64 encoded | `string` | `""` | no |
+| <a name="input_tls_type"></a> [tls\_type](#input\_tls\_type) | Defines TLS configuration. Set to `import` to import any existing TLS cert and key. It could be self-signed and created by Let's Encrypt. See more info here: https://docs.chain.link/chainlink-nodes/enabling-https-connections. AWS ACM ('acm') isn't supported yet. | `string` | `"import"` | no |
+| <a name="input_tls_ui_enabled"></a> [tls\_ui\_enabled](#input\_tls\_ui\_enabled) | Defines if TLS configuration to access Chainlink Node UI should be enabled | `bool` | `false` | no |
 | <a name="input_vpc_cidr_block"></a> [vpc\_cidr\_block](#input\_vpc\_cidr\_block) | The CIDR block of the VPC | `string` | n/a | yes |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | ID of the VPC where Chainlink EAs should be deployed | `string` | n/a | yes |
 | <a name="input_vpc_private_subnets"></a> [vpc\_private\_subnets](#input\_vpc\_private\_subnets) | VPC private subnets where Chainlink Node should be deployed (at least 2) | `list(any)` | n/a | yes |

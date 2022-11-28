@@ -10,7 +10,7 @@
         "containerPort": ${port_ui},
         "hostPort": ${port_ui}
       },
-      %{ if https_ui_enabled == "true" }
+      %{ if tls_ui_enabled == "true" }
       {
         "containerPort": ${tls_port_ui},
         "hostPort": ${tls_port_ui}
@@ -28,7 +28,7 @@
       { "name" : "${definition.name}", "value" : "${definition.value}" },
       %{~ endfor ~}
       { "name" : "CHAINLINK_PORT", "value" : "${port_ui}" },
-      { "name" : "HTTPS_UI_ENABLED", "value" : "${https_ui_enabled}" },
+      { "name" : "TLS_UI_ENABLED", "value" : "${tls_ui_enabled}" },
       { "name" : "CHAINLINK_TLS_PORT", "value" : "${tls_port_ui}" },
       { "name" : "P2P_ANNOUNCE_PORT", "value" : "${port_node}" },
       { "name" : "P2P_LISTEN_PORT", "value" : "${port_node}" },
@@ -40,7 +40,7 @@
         "name": "KEYSTORE_PASSWORD",
         "valueFrom": "${keystore_password}"
       },
-      %{ if https_ui_enabled == "true" }
+      %{ if tls_ui_enabled == "true" }
       {
         "name": "TLS_CERT",
         "valueFrom": "${tls_cert}"

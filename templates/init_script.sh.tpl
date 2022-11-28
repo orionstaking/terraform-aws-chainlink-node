@@ -7,10 +7,10 @@ export DATABASE_URL=$(echo $DATABASE_URL | base64 -d)
 echo [INFO] AvailabilityZone $AZ
 echo [INFO] P2P_ANNOUNCE_IP $P2P_ANNOUNCE_IP
 echo [INFO] P2P_ANNOUNCE_PORT $P2P_ANNOUNCE_PORT
-[ \"$HTTPS_UI_ENABLED\" = \"true\" ] && echo \"[INFO] HTTPS is enabled on Chainlink Node. Importing...\"
-[ \"$HTTPS_UI_ENABLED\" = \"true\" ] && echo $TLS_CERT | base64 -d > ~/chainlink/server.crt && export TLS_CERT_PATH=~/chainlink/server.crt
-[ \"$HTTPS_UI_ENABLED\" = \"true\" ] && echo $TLS_KEY | base64 -d > ~/chainlink/server.key && export TLS_KEY_PATH=~/chainlink/server.key
-[ \"$HTTPS_UI_ENABLED\" = \"true\" ] && export SECURE_COOKIES=true || export SECURE_COOKIES=false
-[ \"$HTTPS_UI_ENABLED\" = \"true\" ] || export CHAINLINK_TLS_PORT=0
-[ ! -z \"$TLS_CERT_PATH\" ] && [ ! -z \"$TLS_KEY_PATH\" ] && echo \"[INFO] TLS certificate and server key imported\"
+[ \"$TLS_UI_ENABLED\" = \"true\" ] && echo \"[INFO] TLS is enabled on Chainlink Node. Importing...\" || echo \"[INFO] TLS is not enabled on Chainlink Node\"
+[ \"$TLS_UI_ENABLED\" = \"true\" ] && echo $TLS_CERT | base64 -d > ~/chainlink/server.crt && export TLS_CERT_PATH=~/chainlink/server.crt || true
+[ \"$TLS_UI_ENABLED\" = \"true\" ] && echo $TLS_KEY | base64 -d > ~/chainlink/server.key && export TLS_KEY_PATH=~/chainlink/server.key || true
+[ \"$TLS_UI_ENABLED\" = \"true\" ] && export SECURE_COOKIES=true || export SECURE_COOKIES=false
+[ \"$TLS_UI_ENABLED\" = \"true\" ] || export CHAINLINK_TLS_PORT=0
+[ ! -z \"$TLS_CERT_PATH\" ] && [ ! -z \"$TLS_KEY_PATH\" ] && echo \"[INFO] TLS certificate and server key imported\" || echo \"[INFO] Skip TLS certificate and server key import\"
 chainlink local node -p ~/chainlink/.password -a ~/chainlink/.api
