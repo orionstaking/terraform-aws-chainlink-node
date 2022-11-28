@@ -91,10 +91,10 @@ module "chainlink_node" {
   api_credentials_secret_arn   = aws_secretsmanager_secret.api.arn
   database_url_secret_arn      = aws_secretsmanager_secret.db.arn
 
-  tls_ui_enabled               = true
-  tls_type                     = "import"
-  tls_cert_secret_arn          = aws_secretsmanager_secret.tls_cert.arn
-  tls_key_secret_arn           = aws_secretsmanager_secret.tls_key.arn
+  tls_ui_enabled      = true
+  tls_type            = "import"
+  tls_cert_secret_arn = aws_secretsmanager_secret.tls_cert.arn
+  tls_key_secret_arn  = aws_secretsmanager_secret.tls_key.arn
 
   node_version        = "1.9.0"
   task_cpu            = 1024
