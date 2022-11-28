@@ -38,7 +38,7 @@ data "aws_iam_policy_document" "this" {
   }
 
   dynamic "statement" {
-    for_each = var.tls_ui_enabled && var.tls_type == "import" ? ["tls"] : [] 
+    for_each = var.tls_ui_enabled && var.tls_type == "import" ? ["tls"] : []
 
     content {
       effect = "Allow"
