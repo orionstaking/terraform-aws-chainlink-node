@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0](https://github.com/ChainOrion/terraform-aws-chainlink-node/compare/v1.5.0...v1.6.0) (2022-12-06)
+
+
+### Features
+
+* Added ability to use custom registry for CL node docker image ([#3](https://github.com/ChainOrion/terraform-aws-chainlink-node/issues/3)) ([80b4063](https://github.com/ChainOrion/terraform-aws-chainlink-node/commit/80b4063d158a4c3978d72aa806d582e5d29257c2))
+
 ## [1.5.0](https://github.com/ChainOrion/terraform-aws-chainlink-node/compare/v1.4.1...v1.5.0) (2022-11-28)
 
 
