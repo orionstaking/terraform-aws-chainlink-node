@@ -82,6 +82,12 @@ variable "node_version" {
   type        = string
 }
 
+variable "node_image_source" {
+  description = "Chainlink node docker image source. This variable can be used to rewrite default image source. Used AWS registry by default. Set to `smartcontract/chainlink` to use dockerhub registry"
+  default     = "public.ecr.aws/chainlink/chainlink"
+  type        = string
+}
+
 variable "node_config" {
   description = "Chainlink node configuration environment variables. The full list could be found here: https://docs.chain.link/docs/configuration-variables/"
   type        = map(any)
