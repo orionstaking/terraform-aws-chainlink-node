@@ -66,15 +66,38 @@ variable "database_url_secret_arn" {
   type        = string
 }
 
-variable "chainlink_node_port" {
-  description = "P2P_ANNOUNCE_PORT from the chainlink OCR node config. More info here: https://docs.chain.link/docs/configuration-variables/#networking-stack-v1"
+variable "chainlink_p2p_networking_stack" {
+  description = "P2P_NETWORKING_STACK from the chainlink OCR node config. More info here: https://docs.chain.link/chainlink-nodes/configuration-variables/#p2p_networking_stack"
+  type        = string
+
+  validation {
+    condition     = contains(["V1", "V1V2", "V2"], var.chainlink_p2p_networking_stack)
+    error_message = "Valid values for var: chainlink_p2p_networking_stack are (V1, V1V2, V2)."
+  }
+}
+
+variable "chainlink_node_port_p2pv1" {
+  description = "P2P_ANNOUNCE_PORT from the chainlink OCR node config. Required if chainlink_p2p_networking_stack set to `V1` or `V1V2`. More info here: https://docs.chain.link/docs/configuration-variables/#networking-stack-v1"
   type        = number
+  default     = null
+}
+
+variable "chainlink_node_port_p2pv2" {
+  description = "Port that will be used in P2PV2_ANNOUNCE_ADDRESSES and P2PV2_LISTEN_ADDRESSES env variables from chainlink OCR node config. Required if chainlink_p2p_networking_stack set to `V1V2` or `V2`. More info here: https://docs.chain.link/chainlink-nodes/configuration-variables/#networking-stack-v2"
+  type        = number
+  default     = null
 }
 
 variable "chainlink_ui_port" {
   description = "CHAINLINK_PORT from the chainlink OCR node config. More info here: https://docs.chain.link/docs/configuration-variables/#chainlink_port"
   default     = 6688
   type        = number
+}
+
+variable "chainlink_listen_ip" {
+  description = "P2P_LISTEN_IP from chainlink OCR node config. Will be used in both V1 and V2 networking stack if enabled. More info here: https://docs.chain.link/chainlink-nodes/configuration-variables/#networking-stack-v1"
+  default     = "0.0.0.0"
+  type        = string
 }
 
 variable "node_version" {

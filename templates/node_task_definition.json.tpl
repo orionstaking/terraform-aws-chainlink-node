@@ -6,19 +6,27 @@
     "image": "${docker_image}",
     "essential": true,
     "portMappings": [
-      {
-        "containerPort": ${port_ui},
-        "hostPort": ${port_ui}
-      },
       %{ if tls_ui_enabled == "true" }
       {
         "containerPort": ${tls_port_ui},
         "hostPort": ${tls_port_ui}
       },
       %{ endif }
+      %{ if networking_stack == "V1" || networking_stack == "V1V2" }
       {
-        "containerPort": ${port_node},
-        "hostPort": ${port_node}
+        "containerPort": ${port_node_v1},
+        "hostPort": ${port_node_v1}
+      },
+      %{ endif }
+      %{ if networking_stack == "V1V2" || networking_stack == "V2" }
+      {
+        "containerPort": ${port_node_v2},
+        "hostPort": ${port_node_v2}
+      },
+      %{ endif }
+      {
+        "containerPort": ${port_ui},
+        "hostPort": ${port_ui}
       }
     ],
     "entryPoint": ["/bin/bash"],
@@ -30,8 +38,16 @@
       { "name" : "CHAINLINK_PORT", "value" : "${port_ui}" },
       { "name" : "TLS_UI_ENABLED", "value" : "${tls_ui_enabled}" },
       { "name" : "CHAINLINK_TLS_PORT", "value" : "${tls_port_ui}" },
-      { "name" : "P2P_ANNOUNCE_PORT", "value" : "${port_node}" },
-      { "name" : "P2P_LISTEN_PORT", "value" : "${port_node}" },
+      { "name" : "P2P_NETWORKING_STACK", "value" : "${networking_stack}" },
+      %{ if networking_stack == "V1" || networking_stack == "V1V2" }
+      { "name" : "P2P_ANNOUNCE_PORT", "value" : "${port_node_v1}" },
+      { "name" : "P2P_LISTEN_PORT", "value" : "${port_node_v1}" },
+      %{ endif }
+      %{ if networking_stack == "V1V2" || networking_stack == "V2" }
+      { "name" : "P2P_ANNOUNCE_PORT_V2", "value" : "${port_node_v2}" },
+      { "name" : "P2P_LISTEN_PORT_V2", "value" : "${port_node_v2}" },
+      %{ endif }
+      { "name" : "P2P_LISTEN_IP", "value" : "${listen_ip}" },
       { "name" : "JSON_CONSOLE", "value" : "true" },
       { "name" : "SUBNET_MAP", "value" : "${subnet_mapping}" }
     ],
