@@ -96,10 +96,10 @@ module "chainlink_node" {
   tls_cert_secret_arn = aws_secretsmanager_secret.tls_cert.arn
   tls_key_secret_arn  = aws_secretsmanager_secret.tls_key.arn
 
-  node_version        = "1.11.0"
-  task_cpu            = 1024
-  task_memory         = 2048
-  chainlink_ui_port   = 6688
+  node_version      = "1.11.0"
+  task_cpu          = 1024
+  task_memory       = 2048
+  chainlink_ui_port = 6688
   subnet_mapping = {
     (module.vpc.azs[0]) = {
       ip            = aws_eip.chainlink_p2p[module.vpc.azs[0]].public_ip
