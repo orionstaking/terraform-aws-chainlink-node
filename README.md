@@ -44,10 +44,9 @@ module "chainlink_node" {
   database_url_secret_arn      = aws_secretsmanager_secret.db.arn
 
   # Always check latest versions
-  node_version        = "1.10.0"
+  node_version        = "1.11.0"
   task_cpu            = 1024
   task_memory         = 2048
-  chainlink_node_port = 14666
   chainlink_ui_port   = 6688
   subnet_mapping      = {
     (module.vpc.azs[0]) = {
@@ -61,6 +60,9 @@ module "chainlink_node" {
       allocation_id = aws_eip.chainlink_p2p[module.vpc.azs[1]].id
     }
   }
+
+  chainlink_p2p_networking_stack = "V1"
+  chainlink_node_port_p2pv1      = 11333
 
   node_config = {
     OOT                                 = "/chainlink"
@@ -115,6 +117,11 @@ It's possible to specify any environment variable from https://docs.chain.link/d
 
 - P2P_ANNOUNCE_IP (during Fargate container startup, init script will set this variable based on `subnet_mapping` terraform module variable)
 - P2P_ANNOUNCE_PORT (this variable will be set from `chainlink_node_port` terraform module variable)
+- P2P_LISTEN_IP (this variable will be set from `chainlink_listen_ip` terraform module variable)
+- P2P_LISTEN_PORT (during Fargate container startup, init script will set this variable based on `chainlink_node_port` terraform module variable)
+- P2P_NETWORKING_STACK (this variable will be set from `chainlink_p2p_networking_stack` terraform module variable)
+- P2PV2_ANNOUNCE_ADDRESSES (during Fargate container startup, init script will set this variable based on `subnet_mapping` and `chainlink_node_port` terraform module variables)
+- P2PV2_LISTEN_ADDRESSES (during Fargate container startup, init script will set this variable based on `chainlink_listen_ip` and `chainlink_node_port` terraform module variables)
 - CLIENT_NODE_URL (this variable will be set from `chainlink_ui_port` terraform module variable)
 - DATABASE_URL (this variable will be set from AWS Secrets Manager object using `database_url_secret_arn` terraform module variable)
 - JSON_CONSOLE (this variable will be set to `true` in order to have an ability to use AWS CloudWatch metrics filter)
@@ -185,15 +192,19 @@ No modules.
 | [aws_iam_role_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_lb.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb) | resource |
 | [aws_lb_listener.node](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
+| [aws_lb_listener.node_v2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
 | [aws_lb_listener.ui](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
 | [aws_lb_target_group.node](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
+| [aws_lb_target_group.node_v2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
 | [aws_lb_target_group.ui](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
 | [aws_security_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_security_group_rule.egress_allow_all](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [aws_security_group_rule.ingress_allow_node](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
+| [aws_security_group_rule.ingress_allow_node_v2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [aws_security_group_rule.ingress_allow_ui](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [aws_sns_topic.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic) | resource |
 | [random_string.alb_prefix_node](https://registry.terraform.io/providers/hashicorp/random/3.4.3/docs/resources/string) | resource |
+| [random_string.alb_prefix_node_v2](https://registry.terraform.io/providers/hashicorp/random/3.4.3/docs/resources/string) | resource |
 | [random_string.alb_prefix_ui](https://registry.terraform.io/providers/hashicorp/random/3.4.3/docs/resources/string) | resource |
 | [aws_iam_policy_document.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 
@@ -204,7 +215,10 @@ No modules.
 | <a name="input_api_credentials_secret_arn"></a> [api\_credentials\_secret\_arn](#input\_api\_credentials\_secret\_arn) | ARN of the Secrets Manager Secret in the same AWS account and Region that contains the API credentials for the chainlink node. Value of AWS SM object must be base64 encoded | `string` | n/a | yes |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | AWS account id. Used to add alarms to dashboard | `string` | n/a | yes |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS Region (required for CloudWatch logs configuration) | `string` | n/a | yes |
-| <a name="input_chainlink_node_port"></a> [chainlink\_node\_port](#input\_chainlink\_node\_port) | P2P\_ANNOUNCE\_PORT from the chainlink OCR node config. More info here: https://docs.chain.link/docs/configuration-variables/#networking-stack-v1 | `number` | n/a | yes |
+| <a name="input_chainlink_listen_ip"></a> [chainlink\_listen\_ip](#input\_chainlink\_listen\_ip) | P2P\_LISTEN\_IP from chainlink OCR node config. Will be used in both V1 and V2 networking stack if enabled. More info here: https://docs.chain.link/chainlink-nodes/configuration-variables/#networking-stack-v1 | `string` | `"0.0.0.0"` | no |
+| <a name="input_chainlink_node_port_p2pv1"></a> [chainlink\_node\_port\_p2pv1](#input\_chainlink\_node\_port\_p2pv1) | P2P\_ANNOUNCE\_PORT from the chainlink OCR node config. Required if chainlink\_p2p\_networking\_stack set to `V1` or `V1V2`. More info here: https://docs.chain.link/docs/configuration-variables/#networking-stack-v1 | `number` | `null` | no |
+| <a name="input_chainlink_node_port_p2pv2"></a> [chainlink\_node\_port\_p2pv2](#input\_chainlink\_node\_port\_p2pv2) | Port that will be used in P2PV2\_ANNOUNCE\_ADDRESSES and P2PV2\_LISTEN\_ADDRESSES env variables from chainlink OCR node config. Required if chainlink\_p2p\_networking\_stack set to `V1V2` or `V2`. More info here: https://docs.chain.link/chainlink-nodes/configuration-variables/#networking-stack-v2 | `number` | `null` | no |
+| <a name="input_chainlink_p2p_networking_stack"></a> [chainlink\_p2p\_networking\_stack](#input\_chainlink\_p2p\_networking\_stack) | P2P\_NETWORKING\_STACK from the chainlink OCR node config. More info here: https://docs.chain.link/chainlink-nodes/configuration-variables/#p2p_networking_stack | `string` | n/a | yes |
 | <a name="input_chainlink_ui_port"></a> [chainlink\_ui\_port](#input\_chainlink\_ui\_port) | CHAINLINK\_PORT from the chainlink OCR node config. More info here: https://docs.chain.link/docs/configuration-variables/#chainlink_port | `number` | `6688` | no |
 | <a name="input_database_url_secret_arn"></a> [database\_url\_secret\_arn](#input\_database\_url\_secret\_arn) | ARN of the Secrets Manager Secret in the same AWS account and Region that contains the database URL for the chainlink node. Value of AWS SM object must be base64 encoded | `string` | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name | `string` | `"nonprod"` | no |

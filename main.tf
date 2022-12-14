@@ -37,7 +37,10 @@ resource "aws_ecs_task_definition" "this" {
       aws_region        = var.aws_region
       port_ui           = var.chainlink_ui_port
       tls_port_ui       = var.tls_chainlink_ui_port
-      port_node         = var.chainlink_node_port
+      networking_stack  = var.chainlink_p2p_networking_stack
+      port_node_v1      = var.chainlink_node_port_p2pv1
+      port_node_v2      = var.chainlink_node_port_p2pv2
+      listen_ip         = var.chainlink_listen_ip
       cpu               = var.task_cpu
       memory            = var.task_memory
       keystore_password = var.keystore_password_secret_arn
@@ -76,10 +79,24 @@ resource "aws_ecs_service" "this" {
     container_port   = var.tls_ui_enabled && var.tls_type == "import" ? var.tls_chainlink_ui_port : var.chainlink_ui_port
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.node.arn
-    container_name   = "${var.project}-${var.environment}-node"
-    container_port   = var.chainlink_node_port
+  dynamic "load_balancer" {
+    for_each = var.chainlink_p2p_networking_stack == "V1" || var.chainlink_p2p_networking_stack == "V1V2" ? ["V1"] : []
+
+    content {
+      target_group_arn = aws_lb_target_group.node[0].arn
+      container_name   = "${var.project}-${var.environment}-node"
+      container_port   = var.chainlink_node_port_p2pv1
+    }
+  }
+
+  dynamic "load_balancer" {
+    for_each = var.chainlink_p2p_networking_stack == "V1V2" || var.chainlink_p2p_networking_stack == "V2" ? ["V2"] : []
+
+    content {
+      target_group_arn = aws_lb_target_group.node_v2[0].arn
+      container_name   = "${var.project}-${var.environment}-node"
+      container_port   = var.chainlink_node_port_p2pv2
+    }
   }
 }
 
@@ -97,9 +114,23 @@ resource "aws_security_group" "this" {
 }
 
 resource "aws_security_group_rule" "ingress_allow_node" {
+  count = var.chainlink_p2p_networking_stack == "V1" || var.chainlink_p2p_networking_stack == "V1V2" ? 1 : 0
+
   type        = "ingress"
-  from_port   = var.chainlink_node_port
-  to_port     = var.chainlink_node_port
+  from_port   = var.chainlink_node_port_p2pv1
+  to_port     = var.chainlink_node_port_p2pv1
+  protocol    = "tcp"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  security_group_id = aws_security_group.this.id
+}
+
+resource "aws_security_group_rule" "ingress_allow_node_v2" {
+  count = var.chainlink_p2p_networking_stack == "V1V2" || var.chainlink_p2p_networking_stack == "V2" ? 1 : 0
+
+  type        = "ingress"
+  from_port   = var.chainlink_node_port_p2pv2
+  to_port     = var.chainlink_node_port_p2pv2
   protocol    = "tcp"
   cidr_blocks = ["0.0.0.0/0"]
 
