@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.0](https://github.com/ChainOrion/terraform-aws-chainlink-node/compare/v1.6.0...v1.7.0) (2022-12-14)
+
+
+### Features
+
+* P2PV2 support using ENV variables ([#4](https://github.com/ChainOrion/terraform-aws-chainlink-node/issues/4)) ([799fcdd](https://github.com/ChainOrion/terraform-aws-chainlink-node/commit/799fcdd21efd7c5c710f1101628cfa5949b2ecdb))
+
 ## [1.6.0](https://github.com/ChainOrion/terraform-aws-chainlink-node/compare/v1.5.0...v1.6.0) (2022-12-06)
 
 
