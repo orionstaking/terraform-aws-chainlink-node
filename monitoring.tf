@@ -15,8 +15,15 @@ locals {
       period  = "60"
     },
     {
+      name    = "CritTimeoutSQL"
+      pattern = "{ $.msg = \"*SLOW SQL QUERY*\" }"
+      level   = "Crit"
+      comment = "[CRIT] SQL queries constantly timed out"
+      period  = "180"
+    },
+    {
       name    = "CritUnknown"
-      pattern = "{ $.level = \"crit\" }"
+      pattern = "{ $.level = \"crit\" && $.msg != \"*SLOW SQL QUERY*\" }"
       level   = "Crit"
       comment = "[CRIT] Unknown issue. Please check AWS CLoudWatch logs. More abount log levels: https://docs.chain.link/docs/configuration-variables/#log_level"
       period  = "60"
