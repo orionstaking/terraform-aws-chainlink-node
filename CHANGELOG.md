@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.7.1](https://github.com/ChainOrion/terraform-aws-chainlink-node/compare/v1.7.0...v1.7.1) (2022-12-20)
+
+
+### Bug Fixes
+
+* Added SQL timeout issues to separate alarm ([#5](https://github.com/ChainOrion/terraform-aws-chainlink-node/issues/5)) ([c9f8202](https://github.com/ChainOrion/terraform-aws-chainlink-node/commit/c9f82026331cf4da7cc895d5ee6a79c6cb3e6ddf))
+
 ## [1.7.0](https://github.com/ChainOrion/terraform-aws-chainlink-node/compare/v1.6.0...v1.7.0) (2022-12-14)
 
 
