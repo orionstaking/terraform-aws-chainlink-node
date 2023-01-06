@@ -18,8 +18,8 @@ resource "aws_lb" "this" {
 
 resource "random_string" "alb_prefix_ui" {
   keepers = {
-    # Generate a new id each time we change chainlink_ui_port
-    port = var.tls_ui_enabled && var.tls_type == "import" ? var.tls_chainlink_ui_port : var.chainlink_ui_port
+    # Generate a new id each time we change ui_port
+    port = local.tls_import ? local.tls_ui_port : local.ui_port
   }
 
   length  = 4
@@ -28,11 +28,11 @@ resource "random_string" "alb_prefix_ui" {
 }
 
 resource "random_string" "alb_prefix_node" {
-  count = var.chainlink_p2p_networking_stack == "V1" || var.chainlink_p2p_networking_stack == "V1V2" ? 1 : 0
+  count = local.networking_stack == "V1" || local.networking_stack == "V1V2" ? 1 : 0
 
   keepers = {
-    # Generate a new id each time we change chainlink_node_port_p2pv1
-    port = var.chainlink_node_port_p2pv1
+    # Generate a new id each time we change announce_port_v1
+    port = local.announce_port_v1
   }
 
   length  = 4
@@ -41,11 +41,11 @@ resource "random_string" "alb_prefix_node" {
 }
 
 resource "random_string" "alb_prefix_node_v2" {
-  count = var.chainlink_p2p_networking_stack == "V1V2" || var.chainlink_p2p_networking_stack == "V2" ? 1 : 0
+  count = local.networking_stack == "V1V2" || local.networking_stack == "V2" ? 1 : 0
 
   keepers = {
-    # Generate a new id each time we change chainlink_node_port_p2pv2
-    port = var.chainlink_node_port_p2pv2
+    # Generate a new id each time we change announce_port_v2
+    port = local.announce_port_v2
   }
 
   length  = 2
@@ -55,7 +55,7 @@ resource "random_string" "alb_prefix_node_v2" {
 
 resource "aws_lb_target_group" "ui" {
   name                 = "chainlink-${var.environment}-ui-${random_string.alb_prefix_ui.result}"
-  port                 = var.tls_ui_enabled && var.tls_type == "import" ? var.tls_chainlink_ui_port : var.chainlink_ui_port
+  port                 = local.tls_import ? local.tls_ui_port : local.ui_port
   protocol             = "TCP"
   target_type          = "ip"
   vpc_id               = var.vpc_id
@@ -65,7 +65,7 @@ resource "aws_lb_target_group" "ui" {
   health_check {
     enabled             = true
     path                = "/health"
-    port                = var.chainlink_ui_port
+    port                = local.ui_port
     healthy_threshold   = 2
     unhealthy_threshold = 2
     interval            = 10
@@ -78,10 +78,10 @@ resource "aws_lb_target_group" "ui" {
 }
 
 resource "aws_lb_target_group" "node" {
-  count = var.chainlink_p2p_networking_stack == "V1" || var.chainlink_p2p_networking_stack == "V1V2" ? 1 : 0
+  count = local.networking_stack == "V1" || local.networking_stack == "V1V2" ? 1 : 0
 
   name                 = "chainlink-${var.environment}-node-${random_string.alb_prefix_node[0].result}"
-  port                 = var.chainlink_node_port_p2pv1
+  port                 = local.announce_port_v1
   protocol             = "TCP"
   target_type          = "ip"
   vpc_id               = var.vpc_id
@@ -91,7 +91,7 @@ resource "aws_lb_target_group" "node" {
   health_check {
     enabled             = true
     path                = "/health"
-    port                = var.chainlink_ui_port
+    port                = local.ui_port
     healthy_threshold   = 2
     unhealthy_threshold = 2
     interval            = 10
@@ -104,10 +104,10 @@ resource "aws_lb_target_group" "node" {
 }
 
 resource "aws_lb_target_group" "node_v2" {
-  count = var.chainlink_p2p_networking_stack == "V1V2" || var.chainlink_p2p_networking_stack == "V2" ? 1 : 0
+  count = local.networking_stack == "V1V2" || local.networking_stack == "V2" ? 1 : 0
 
   name                 = "chainlink-${var.environment}-nodev2-${random_string.alb_prefix_node_v2[0].result}"
-  port                 = var.chainlink_node_port_p2pv2
+  port                 = local.announce_port_v2
   protocol             = "TCP"
   target_type          = "ip"
   vpc_id               = var.vpc_id
@@ -117,7 +117,7 @@ resource "aws_lb_target_group" "node_v2" {
   health_check {
     enabled             = true
     path                = "/health"
-    port                = var.chainlink_ui_port
+    port                = local.ui_port
     healthy_threshold   = 2
     unhealthy_threshold = 2
     interval            = 10
@@ -131,7 +131,7 @@ resource "aws_lb_target_group" "node_v2" {
 
 resource "aws_lb_listener" "ui" {
   load_balancer_arn = aws_lb.this.arn
-  port              = var.tls_ui_enabled && var.tls_type == "import" ? var.tls_chainlink_ui_port : var.chainlink_ui_port
+  port              = local.tls_import ? local.tls_ui_port : local.ui_port
   protocol          = "TCP"
 
   default_action {
@@ -141,10 +141,10 @@ resource "aws_lb_listener" "ui" {
 }
 
 resource "aws_lb_listener" "node" {
-  count = var.chainlink_p2p_networking_stack == "V1" || var.chainlink_p2p_networking_stack == "V1V2" ? 1 : 0
+  count = local.networking_stack == "V1" || local.networking_stack == "V1V2" ? 1 : 0
 
   load_balancer_arn = aws_lb.this.arn
-  port              = var.chainlink_node_port_p2pv1
+  port              = local.announce_port_v1
   protocol          = "TCP"
 
   default_action {
@@ -154,10 +154,10 @@ resource "aws_lb_listener" "node" {
 }
 
 resource "aws_lb_listener" "node_v2" {
-  count = var.chainlink_p2p_networking_stack == "V1V2" || var.chainlink_p2p_networking_stack == "V2" ? 1 : 0
+  count = local.networking_stack == "V1V2" || local.networking_stack == "V2" ? 1 : 0
 
   load_balancer_arn = aws_lb.this.arn
-  port              = var.chainlink_node_port_p2pv2
+  port              = local.announce_port_v2
   protocol          = "TCP"
 
   default_action {

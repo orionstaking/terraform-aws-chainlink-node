@@ -47,7 +47,7 @@ module "chainlink_node" {
   node_version        = "1.11.0"
   task_cpu            = 1024
   task_memory         = 2048
-  chainlink_ui_port   = 6688
+  ui_port             = 6688
   subnet_mapping      = {
     (module.vpc.azs[0]) = {
       ip            = aws_eip.chainlink_p2p[module.vpc.azs[0]].public_ip
@@ -122,13 +122,13 @@ It's possible to specify any environment variable from https://docs.chain.link/d
 - P2P_NETWORKING_STACK (this variable will be set from `chainlink_p2p_networking_stack` terraform module variable)
 - P2PV2_ANNOUNCE_ADDRESSES (during Fargate container startup, init script will set this variable based on `subnet_mapping` and `chainlink_node_port` terraform module variables)
 - P2PV2_LISTEN_ADDRESSES (during Fargate container startup, init script will set this variable based on `chainlink_listen_ip` and `chainlink_node_port` terraform module variables)
-- CLIENT_NODE_URL (this variable will be set from `chainlink_ui_port` terraform module variable)
+- CLIENT_NODE_URL (this variable will be set from `ui_port` terraform module variable)
 - DATABASE_URL (this variable will be set from AWS Secrets Manager object using `database_url_secret_arn` terraform module variable)
 - JSON_CONSOLE (this variable will be set to `true` in order to have an ability to use AWS CloudWatch metrics filter)
 - TLS_CERT_PATH (during Fargate container startup, init script will set this variable based on `tls_ui_enabled` and `tls_type` terraform variables)
 - TLS_KEY_PATH (during Fargate container startup, init script will set this variable based on `tls_ui_enabled` and `tls_type` terraform variables)
 - SECURE_COOKIES (during Fargate container startup, init script will set this variable based on `tls_ui_enabled` and `tls_type` terraform variables)
-- CHAINLINK_TLS_PORT (during Fargate container startup, init script will set this variable based on `tls_ui_enabled`, `tls_type`, and `tls_chainlink_ui_port` terraform variables)
+- CHAINLINK_TLS_PORT (during Fargate container startup, init script will set this variable based on `tls_ui_enabled`, `tls_type`, and `tls_ui_port` terraform variables)
 
 Check example [here](https://github.com/orionterra/terraform-aws-chainlink-node/tree/main/examples/complete_example).
 
@@ -219,7 +219,7 @@ No modules.
 | <a name="input_chainlink_node_port_p2pv1"></a> [chainlink\_node\_port\_p2pv1](#input\_chainlink\_node\_port\_p2pv1) | P2P\_ANNOUNCE\_PORT from the chainlink OCR node config. Required if chainlink\_p2p\_networking\_stack set to `V1` or `V1V2`. More info here: https://docs.chain.link/docs/configuration-variables/#networking-stack-v1 | `number` | `null` | no |
 | <a name="input_chainlink_node_port_p2pv2"></a> [chainlink\_node\_port\_p2pv2](#input\_chainlink\_node\_port\_p2pv2) | Port that will be used in P2PV2\_ANNOUNCE\_ADDRESSES and P2PV2\_LISTEN\_ADDRESSES env variables from chainlink OCR node config. Required if chainlink\_p2p\_networking\_stack set to `V1V2` or `V2`. More info here: https://docs.chain.link/chainlink-nodes/configuration-variables/#networking-stack-v2 | `number` | `null` | no |
 | <a name="input_chainlink_p2p_networking_stack"></a> [chainlink\_p2p\_networking\_stack](#input\_chainlink\_p2p\_networking\_stack) | P2P\_NETWORKING\_STACK from the chainlink OCR node config. More info here: https://docs.chain.link/chainlink-nodes/configuration-variables/#p2p_networking_stack | `string` | n/a | yes |
-| <a name="input_chainlink_ui_port"></a> [chainlink\_ui\_port](#input\_chainlink\_ui\_port) | CHAINLINK\_PORT from the chainlink OCR node config. More info here: https://docs.chain.link/docs/configuration-variables/#chainlink_port | `number` | `6688` | no |
+| <a name="input_ui_port"></a> [chainlink\_ui\_port](#input\_chainlink\_ui\_port) | CHAINLINK\_PORT from the chainlink OCR node config. More info here: https://docs.chain.link/docs/configuration-variables/#chainlink_port | `number` | `6688` | no |
 | <a name="input_database_url_secret_arn"></a> [database\_url\_secret\_arn](#input\_database\_url\_secret\_arn) | ARN of the Secrets Manager Secret in the same AWS account and Region that contains the database URL for the chainlink node. Value of AWS SM object must be base64 encoded | `string` | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name | `string` | `"nonprod"` | no |
 | <a name="input_keystore_password_secret_arn"></a> [keystore\_password\_secret\_arn](#input\_keystore\_password\_secret\_arn) | ARN of the Secrets Manager Secret in the same AWS account and Region that contains the keystore password for the chainlink node. Value of AWS SM object must be base64 encoded | `string` | n/a | yes |
@@ -233,7 +233,7 @@ No modules.
 | <a name="input_task_cpu"></a> [task\_cpu](#input\_task\_cpu) | Allocated CPU for chainlink node container | `number` | `2048` | no |
 | <a name="input_task_memory"></a> [task\_memory](#input\_task\_memory) | Allocated Memory for chainlink node container | `number` | `4096` | no |
 | <a name="input_tls_cert_secret_arn"></a> [tls\_cert\_secret\_arn](#input\_tls\_cert\_secret\_arn) | ARN of the Secrets Manager Secret in the same AWS account and Region that contains the TLS certificate. Required when `tls_ui_enabled`=`true` and `tls_type`=`import`. Value of AWS SM object must be base64 encoded | `string` | `""` | no |
-| <a name="input_tls_chainlink_ui_port"></a> [tls\_chainlink\_ui\_port](#input\_tls\_chainlink\_ui\_port) | CHAINLINK\_TLS\_PORT from the chainlink OCR node config. More info here: https://docs.chain.link/chainlink-nodes/configuration-variables#chainlink_tls_port | `number` | `6689` | no |
+| <a name="input_tls_ui_port"></a> [tls\_chainlink\_ui\_port](#input\_tls\_chainlink\_ui\_port) | CHAINLINK\_TLS\_PORT from the chainlink OCR node config. More info here: https://docs.chain.link/chainlink-nodes/configuration-variables#chainlink_tls_port | `number` | `6689` | no |
 | <a name="input_tls_key_secret_arn"></a> [tls\_key\_secret\_arn](#input\_tls\_key\_secret\_arn) | ARN of the Secrets Manager Secret in the same AWS account and Region that contains the TLS key. Required when `tls_ui_enabled`=`true` and `tls_type`=`import`. Value of AWS SM object must be base64 encoded | `string` | `""` | no |
 | <a name="input_tls_type"></a> [tls\_type](#input\_tls\_type) | Defines TLS configuration. Set to `import` to import any existing TLS cert and key. It could be self-signed and created by Let's Encrypt. See more info here: https://docs.chain.link/chainlink-nodes/enabling-https-connections. AWS ACM ('acm') isn't supported yet. | `string` | `"import"` | no |
 | <a name="input_tls_ui_enabled"></a> [tls\_ui\_enabled](#input\_tls\_ui\_enabled) | Defines if TLS configuration to access Chainlink Node UI should be enabled | `bool` | `false` | no |

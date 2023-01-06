@@ -99,7 +99,7 @@ module "chainlink_node" {
   node_version      = "1.11.0"
   task_cpu          = 1024
   task_memory       = 2048
-  chainlink_ui_port = 6688
+  ui_port           = 6688
   subnet_mapping = {
     (module.vpc.azs[0]) = {
       ip            = aws_eip.chainlink_p2p[module.vpc.azs[0]].public_ip
