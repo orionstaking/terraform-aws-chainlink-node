@@ -1,6 +1,7 @@
 import sys
 import json
-import tomllib
+# import tomllib # python 3.11
+import toml
 import collections
 
 
@@ -145,8 +146,11 @@ if __name__ == "__main__":
     input_json = json.loads(sys.stdin.read())
     tf_announce_ips = input_json.get("tf_announce_ips").split(",")
 
-    with open("config.toml", "rb") as f:
-        data = tomllib.load(f)
+    # python 3.11
+    # with open("config.toml", "rb") as f:
+    #     data = tomllib.load(f)
+
+    data = toml.load("config.toml")
 
     output = parse_config(data)
     output_json = json.dumps(output, indent=2)
