@@ -27,7 +27,7 @@ locals {
   tls_import       = data.external.parse_config.result.tls_import
   tls_ui_port      = data.external.parse_config.result.https_port
   tls_cert_path    = data.external.parse_config.result.cert_path
-  tls_cert_key     = data.external.parse_config.result.key_path
+  tls_key_path     = data.external.parse_config.result.key_path
   networking_stack = data.external.parse_config.result.networking_stack
   announce_port_v1 = data.external.parse_config.result.announce_port
   listen_port_v1   = data.external.parse_config.result.listen_port
@@ -72,7 +72,9 @@ resource "aws_ecs_task_definition" "this" {
       task_cpu         = var.task_cpu
       task_memory      = var.task_memory
       tls_cert         = var.tls_cert_secret_arn
+      tls_cert_path    = local.tls_cert_path
       tls_key          = var.tls_key_secret_arn
+      tls_key_path     = local.tls_key_path
       env_vars         = local.env_vars
       config           = aws_secretsmanager_secret.config.arn
       secrets          = var.secrets_secret_arn

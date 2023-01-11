@@ -35,6 +35,10 @@
       %{~ for definition in env_vars ~}
       { "name" : "${definition.name}", "value" : "${definition.value}" },
       %{~ endfor ~}
+      %{ if tls_ui_enabled == "true" }
+      { "name" : "TASK_TLS_CERT_PATH", "value" : "${tls_cert_path}" },
+      { "name" : "TASK_TLS_KEY_PATH", "value" : "${tls_key_path}" },
+      %{ endif }
       { "name" : "TOML_CONFIG_ENABLED", "value" : "true" }
     ],
     "secrets": [
