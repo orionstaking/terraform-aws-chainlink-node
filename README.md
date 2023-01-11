@@ -127,6 +127,7 @@ Create AWS Secrets Manager objects first by commenting out the section with modu
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.12.0 |
+| <a name="requirement_external"></a> [external](#requirement\_external) | 2.2.3 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | 3.4.3 |
 
 ## Providers
@@ -134,7 +135,7 @@ Create AWS Secrets Manager objects first by commenting out the section with modu
 | Name | Version |
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.12.0 |
-| <a name="provider_external"></a> [external](#provider\_external) | n/a |
+| <a name="provider_external"></a> [external](#provider\_external) | 2.2.3 |
 | <a name="provider_random"></a> [random](#provider\_random) | 3.4.3 |
 
 ## Modules
@@ -176,7 +177,7 @@ No modules.
 | [random_string.alb_prefix_node_v2](https://registry.terraform.io/providers/hashicorp/random/3.4.3/docs/resources/string) | resource |
 | [random_string.alb_prefix_ui](https://registry.terraform.io/providers/hashicorp/random/3.4.3/docs/resources/string) | resource |
 | [aws_iam_policy_document.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
-| [external_external.parse_config](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
+| [external_external.parse_config](https://registry.terraform.io/providers/hashicorp/external/2.2.3/docs/data-sources/external) | data source |
 
 ## Inputs
 
