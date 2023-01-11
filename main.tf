@@ -9,29 +9,29 @@ locals {
   ])
 
   tf_announce_ips = [
-    for subnet in var.subnet_mapping: subnet.ip
+    for subnet in var.subnet_mapping : subnet.ip
   ]
 }
 
 # TOML config parse
 data "external" "parse_config" {
-  program = ["python3","${path.module}/parse_config.py"]
+  program = ["python3", "${path.module}/parse_config.py"]
   query = {
     tf_announce_ips = join(",", local.tf_announce_ips)
   }
 }
 
 locals {
-  ui_port = data.external.parse_config.result.http_port
-  tls_import = data.external.parse_config.result.tls_import
-  tls_ui_port = data.external.parse_config.result.https_port
-  tls_cert_path = data.external.parse_config.result.cert_path
-  tls_cert_key = data.external.parse_config.result.key_path
+  ui_port          = data.external.parse_config.result.http_port
+  tls_import       = data.external.parse_config.result.tls_import
+  tls_ui_port      = data.external.parse_config.result.https_port
+  tls_cert_path    = data.external.parse_config.result.cert_path
+  tls_cert_key     = data.external.parse_config.result.key_path
   networking_stack = data.external.parse_config.result.networking_stack
   announce_port_v1 = data.external.parse_config.result.announce_port
-  listen_port_v1 = data.external.parse_config.result.listen_port
+  listen_port_v1   = data.external.parse_config.result.listen_port
   announce_port_v2 = element(split(":", element(split(",", data.external.parse_config.result.announce_addresses), 0)), 1)
-  listen_port_v2 = element(split(":", data.external.parse_config.result.listen_addresses), 1)
+  listen_port_v2   = element(split(":", data.external.parse_config.result.listen_addresses), 1)
 }
 
 # ECS cluster
@@ -56,26 +56,26 @@ resource "aws_ecs_task_definition" "this" {
   container_definitions = templatefile(
     "${path.module}/templates/node_task_definition.json.tpl",
     {
-      project           = var.project
-      environment       = var.environment
-      docker_image      = "${var.node_image_source}:${var.node_version}"
-      aws_region        = var.aws_region
-      ui_port           = local.ui_port
-      tls_ui_port       = local.tls_ui_port
-      tls_ui_enabled    = local.tls_import
-      networking_stack  = local.networking_stack
-      announce_port_v1  = local.announce_port_v1
-      listen_port_v1    = local.listen_port_v1
-      announce_port_v2  = local.announce_port_v2
-      listen_port_v2    = local.listen_port_v2
-      task_cpu          = var.task_cpu
-      task_memory       = var.task_memory
-      tls_cert          = var.tls_cert_secret_arn
-      tls_key           = var.tls_key_secret_arn
-      env_vars          = local.env_vars
-      config            = aws_secretsmanager_secret.config.arn
-      secrets           = var.secrets_secret_arn
-      init_script       = replace(file("${path.module}/templates/init_script.sh.tpl"), "\n", " && ")
+      project          = var.project
+      environment      = var.environment
+      docker_image     = "${var.node_image_source}:${var.node_version}"
+      aws_region       = var.aws_region
+      ui_port          = local.ui_port
+      tls_ui_port      = local.tls_ui_port
+      tls_ui_enabled   = local.tls_import
+      networking_stack = local.networking_stack
+      announce_port_v1 = local.announce_port_v1
+      listen_port_v1   = local.listen_port_v1
+      announce_port_v2 = local.announce_port_v2
+      listen_port_v2   = local.listen_port_v2
+      task_cpu         = var.task_cpu
+      task_memory      = var.task_memory
+      tls_cert         = var.tls_cert_secret_arn
+      tls_key          = var.tls_key_secret_arn
+      env_vars         = local.env_vars
+      config           = aws_secretsmanager_secret.config.arn
+      secrets          = var.secrets_secret_arn
+      init_script      = replace(file("${path.module}/templates/init_script.sh.tpl"), "\n", " && ")
     }
   )
 }
