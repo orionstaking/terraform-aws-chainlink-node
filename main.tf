@@ -1,8 +1,8 @@
 locals {
   container_insights_monitoring = var.monitoring_enabled ? "enabled" : "disabled"
 
-  node_config = flatten([
-    for key, value in var.node_config : [{
+  env_vars = flatten([
+    for key, value in var.env_vars : [{
       name  = key
       value = value
     }]
@@ -72,9 +72,9 @@ resource "aws_ecs_task_definition" "this" {
       task_memory       = var.task_memory
       tls_cert          = var.tls_cert_secret_arn
       tls_key           = var.tls_key_secret_arn
-      node_config       = local.node_config
+      env_vars          = local.env_vars
       config            = aws_secretsmanager_secret.config.arn
-      secrets           = aws_secretsmanager_secret.secrets.arn
+      secrets           = var.secrets_secret_arn
       init_script       = replace(file("${path.module}/templates/init_script.sh.tpl"), "\n", " && ")
     }
   )

@@ -62,8 +62,8 @@ variable "node_image_source" {
   type        = string
 }
 
-variable "node_config" {
-  description = "Chainlink node configuration environment variables. The full list could be found here: https://docs.chain.link/docs/configuration-variables/"
+variable "env_vars" {
+  description = "Map of values that will be set as environment variables for Chainlink node process. By default it isn't required when using TOML configuration, but could be used to pass any environemnt variable to ECS task"
   type        = map(any)
   default     = {}
 }
@@ -80,15 +80,20 @@ variable "task_memory" {
   default     = 4096
 }
 
-# TLS configutation
+# Secrets configutation
+variable "secrets_secret_arn" {
+  description = "ARN of the Secrets Manager Secret in the same AWS account and Region that contains TOML secrets for Chainlink Node (base64 encoded). See https://github.com/smartcontractkit/chainlink/blob/v1.11.0/docs/SECRETS.md on github to learn more."
+  type        = string
+}
+
 variable "tls_cert_secret_arn" {
-  description = "ARN of the Secrets Manager Secret in the same AWS account and Region that contains the TLS certificate. Required when `tls_ui_enabled`=`true` and `tls_type`=`import`. Value of AWS SM object must be base64 encoded"
+  description = "ARN of the Secrets Manager Secret in the same AWS account and Region that contains the TLS certificate (base64 encoded). Required when WebServer.TLS configuration exist in TOML config"
   type        = string
   default     = ""
 }
 
 variable "tls_key_secret_arn" {
-  description = "ARN of the Secrets Manager Secret in the same AWS account and Region that contains the TLS key. Required when `tls_ui_enabled`=`true` and `tls_type`=`import`. Value of AWS SM object must be base64 encoded"
+  description = "ARN of the Secrets Manager Secret in the same AWS account and Region that contains the TLS key (base64 encoded). Required when WebServer.TLS configuration exist in TOML config"
   type        = string
   default     = ""
 }

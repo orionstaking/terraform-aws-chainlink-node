@@ -32,7 +32,7 @@
     "entryPoint": ["/bin/bash"],
     "command": ["-c", "${init_script}"],
     "environment" : [
-      %{~ for definition in node_config ~}
+      %{~ for definition in env_vars ~}
       { "name" : "${definition.name}", "value" : "${definition.value}" },
       %{~ endfor ~}
       { "name" : "TOML_CONFIG_ENABLED", "value" : "true" }

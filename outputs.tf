@@ -1,6 +1,6 @@
-output "node_config" {
+output "env_vars" {
   description = "Chainlink node configuration environment variables"
-  value       = local.node_config
+  value       = local.env_vars
 }
 
 output "subnet_mapping" {
