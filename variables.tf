@@ -80,6 +80,11 @@ variable "task_memory" {
   default     = 4096
 }
 
+variable "config_toml" {
+  description = "Base64 encoded Chainlink node configuration from config.toml"
+  type        = string
+}
+
 # Secrets configutation
 variable "secrets_secret_arn" {
   description = "ARN of the Secrets Manager Secret in the same AWS account and Region that contains TOML secrets for Chainlink Node (base64 encoded). See https://github.com/smartcontractkit/chainlink/blob/v1.11.0/docs/SECRETS.md on github to learn more."

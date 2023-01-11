@@ -7,5 +7,5 @@ resource "aws_secretsmanager_secret" "config" {
 
 resource "aws_secretsmanager_secret_version" "config" {
   secret_id     = aws_secretsmanager_secret.config.id
-  secret_string = filebase64("config.toml")
+  secret_string = var.config_toml
 }

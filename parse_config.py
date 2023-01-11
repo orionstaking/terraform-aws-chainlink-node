@@ -1,8 +1,8 @@
 import sys
 import json
-# import tomllib # python 3.11
 import toml
 import collections
+import base64
 
 
 def key_err_msg(key_name):
@@ -143,15 +143,16 @@ def parse_config(config):
 
 
 if __name__ == "__main__":
+    # parse input from terraform
     input_json = json.loads(sys.stdin.read())
     tf_announce_ips = input_json.get("tf_announce_ips").split(",")
+    config_base64_string = input_json.get("config_toml")
+    config_base64_bytes = config_base64_string.encode("ascii")
+    config_bytes = base64.b64decode(config_base64_bytes)
+    config = config_bytes.decode('ascii')
 
-    # python 3.11
-    # with open("config.toml", "rb") as f:
-    #     data = tomllib.load(f)
-
-    data = toml.load("config.toml")
-
+    # parse chainlink node toml config and send back to terraform  
+    data = toml.loads(config)
     output = parse_config(data)
     output_json = json.dumps(output, indent=2)
     print(output_json)

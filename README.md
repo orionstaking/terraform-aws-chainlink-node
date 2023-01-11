@@ -184,6 +184,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | AWS account id. Used to add alarms to dashboard | `string` | n/a | yes |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS Region (required for CloudWatch logs configuration) | `string` | n/a | yes |
+| <a name="input_config_toml"></a> [config\_toml](#input\_config\_toml) | Base64 encoded Chainlink node configuration from config.toml | `string` | n/a | yes |
 | <a name="input_env_vars"></a> [env\_vars](#input\_env\_vars) | Map of values that will be set as environment variables for Chainlink node process. By default it isn't required when using TOML configuration, but could be used to pass any environemnt variable to ECS task | `map(any)` | `{}` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name | `string` | `"nonprod"` | no |
 | <a name="input_monitoring_enabled"></a> [monitoring\_enabled](#input\_monitoring\_enabled) | Defines whether to create CloudWatch dashboard and custom metrics or not | `bool` | `true` | no |
