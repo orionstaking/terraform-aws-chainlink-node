@@ -68,9 +68,9 @@ module "chainlink_node" {
 
 This module now supports only TOML configuration. See the [CONFIG.md](https://github.com/smartcontractkit/chainlink/blob/v1.11.0/docs/CONFIG.md) and [SECRETS.md](https://github.com/smartcontractkit/chainlink/blob/v1.11.0/docs/SECRETS.md) on GitHub to learn more.
 
-Place your config.toml in the root of terraform directory. This module will parse and verify it. You will see an error in case of invalid config.toml configuration for this terraform module. Please see an example before peoceed.
+Place your config.toml in the root of terraform directory. This module will parse and verify it. You will see an error in case of invalid config.toml configuration for this terraform module. Please see an example before proceed.
 
-It's possible to specify any environment variable from using `env_vars` terraform module variable except specified below:
+Additionally, it's possible to pass any environment variable to Fargate container using `env_vars` terraform module variable.
 
 Check example [here](https://github.com/orionterra/terraform-aws-chainlink-node/tree/main/examples/complete_example).
 
