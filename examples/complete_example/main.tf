@@ -34,23 +34,20 @@ module "vpc" {
 }
 
 # AWS SecretsManager objects for Chainlink Node
-resource "aws_secretsmanager_secret" "keystore" {
-  name                    = "${local.project}/${local.environment}/node/keystore_password"
-  description             = "Keystore password for ${local.project}-${local.environment} project"
+resource "aws_secretsmanager_secret" "secrets" {
+  name                    = "${local.project}/${local.environment}/node/secrets"
+  description             = "TOML secrets for ${local.project}-${local.environment} in base64 format"
   recovery_window_in_days = 0
 }
 
-resource "aws_secretsmanager_secret" "api" {
-  name                    = "${local.project}/${local.environment}/node/api_credentials"
-  description             = "API credentials for ${local.project}-${local.environment} project"
-  recovery_window_in_days = 0
+# For security reasons secret version could be manually specified using AWS console or cli.
+# Specifying secret version (value) manually will prevent secret value from storing in terraform state.
+# As an example here the secret versino will be specified using terraform.
+resource "aws_secretsmanager_secret_version" "secrets" {
+  secret_id     = aws_secretsmanager_secret.secrets.id
+  secret_string = filebase64("secrets/secrets.toml")
 }
-
-resource "aws_secretsmanager_secret" "db" {
-  name                    = "${local.project}/${local.environment}/node/database_url"
-  description             = "API credentials for ${local.project}-${local.environment} project"
-  recovery_window_in_days = 0
-}
+#
 
 # Public IP address for Chainlink P2P_ANNOUNCE_IP environement variable
 resource "aws_eip" "chainlink_p2p" {
@@ -75,14 +72,12 @@ module "chainlink_node" {
   vpc_cidr_block      = module.vpc.vpc_cidr_block
   vpc_private_subnets = module.vpc.private_subnets
 
-  keystore_password_secret_arn = aws_secretsmanager_secret.keystore.arn
-  api_credentials_secret_arn   = aws_secretsmanager_secret.api.arn
-  database_url_secret_arn      = aws_secretsmanager_secret.db.arn
+  secrets_secret_arn = aws_secretsmanager_secret.secrets.arn
 
-  node_version      = "1.11.0"
-  task_cpu          = 1024
-  task_memory       = 2048
-  chainlink_ui_port = 6688
+  node_version = "1.11.0"
+  task_cpu     = 1024
+  task_memory  = 2048
+  config_toml  = filebase64("config.toml")
   subnet_mapping = {
     (module.vpc.azs[0]) = {
       ip            = aws_eip.chainlink_p2p[module.vpc.azs[0]].public_ip
@@ -94,28 +89,6 @@ module "chainlink_node" {
       subnet_id     = module.vpc.public_subnets[1]
       allocation_id = aws_eip.chainlink_p2p[module.vpc.azs[1]].id
     }
-  }
-
-  chainlink_p2p_networking_stack = "V1V2"
-  chainlink_node_port_p2pv1      = 11333
-  chainlink_node_port_p2pv2      = 11666
-
-  node_config = {
-    OOT                                 = "/chainlink"
-    LOG_LEVEL                           = "info"
-    ETH_CHAIN_ID                        = "4"
-    MIN_OUTGOING_CONFIRMATIONS          = "2"
-    MINIMUM_CONTRACT_PAYMENT_LINK_JUELS = "1000000"
-    LINK_CONTRACT_ADDRESS               = "0x01BE23585060835E02B77ef475b0Cc51aA1e0709"
-    ALLOW_ORIGINS                       = "*"
-    CHAINLINK_TLS_PORT                  = "0"
-    SECURE_COOKIES                      = "false"
-    FEATURE_OFFCHAIN_REPORTING          = "true"
-    OCR_KEY_BUNDLE_ID                   = "61ab53fcf1fb783715a750920353522b2c8cb1494334bdc166945952baa598d9"
-    P2P_PEER_ID                         = "p2p_12D3KooWMqVVtFhRxVfDHnXBzHviPiPVo3MTQq5TwvbPoxsoxmFJ"
-    OCR_TRANSMITTER_ADDRESS             = "0xc11eDFd7Dd359492A686C2f27F66156CBb155D92"
-    P2P_BOOTSTRAP_PEERS                 = "/dns4/rinkeby-bootstrap.dextrac.com/tcp/1100/p2p/12D3KooWFto8Fx141Kixn2JbfGXJWpt8U1B55oBQtsNZWRmyiq1D"
-    DATABASE_LOCKING_MODE               = "lease"
   }
 }
 

@@ -31,14 +31,13 @@ data "aws_iam_policy_document" "this" {
       "kms:Decrypt"
     ]
     resources = [
-      var.keystore_password_secret_arn,
-      var.api_credentials_secret_arn,
-      var.database_url_secret_arn
+      aws_secretsmanager_secret.config.arn,
+      var.secrets_secret_arn
     ]
   }
 
   dynamic "statement" {
-    for_each = var.tls_ui_enabled && var.tls_type == "import" ? ["tls"] : []
+    for_each = local.tls_import ? ["tls"] : []
 
     content {
       effect = "Allow"

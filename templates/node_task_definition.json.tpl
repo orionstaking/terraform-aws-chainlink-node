@@ -1,61 +1,47 @@
 [
   {
     "name": "${project}-${environment}-node",
-    "cpu": ${cpu},
-    "memory": ${memory},
+    "cpu": ${task_cpu},
+    "memory": ${task_memory},
     "image": "${docker_image}",
     "essential": true,
     "portMappings": [
       %{ if tls_ui_enabled == "true" }
       {
-        "containerPort": ${tls_port_ui},
-        "hostPort": ${tls_port_ui}
+        "containerPort": ${tls_ui_port},
+        "hostPort": ${tls_ui_port}
       },
       %{ endif }
       %{ if networking_stack == "V1" || networking_stack == "V1V2" }
       {
-        "containerPort": ${port_node_v1},
-        "hostPort": ${port_node_v1}
+        "containerPort": ${listen_port_v1},
+        "hostPort": ${announce_port_v1}
       },
       %{ endif }
       %{ if networking_stack == "V1V2" || networking_stack == "V2" }
       {
-        "containerPort": ${port_node_v2},
-        "hostPort": ${port_node_v2}
+        "containerPort": ${listen_port_v2},
+        "hostPort": ${announce_port_v2}
       },
       %{ endif }
       {
-        "containerPort": ${port_ui},
-        "hostPort": ${port_ui}
+        "containerPort": ${ui_port},
+        "hostPort": ${ui_port}
       }
     ],
     "entryPoint": ["/bin/bash"],
     "command": ["-c", "${init_script}"],
     "environment" : [
-      %{~ for definition in node_config ~}
+      %{~ for definition in env_vars ~}
       { "name" : "${definition.name}", "value" : "${definition.value}" },
       %{~ endfor ~}
-      { "name" : "CHAINLINK_PORT", "value" : "${port_ui}" },
-      { "name" : "TLS_UI_ENABLED", "value" : "${tls_ui_enabled}" },
-      { "name" : "CHAINLINK_TLS_PORT", "value" : "${tls_port_ui}" },
-      { "name" : "P2P_NETWORKING_STACK", "value" : "${networking_stack}" },
-      %{ if networking_stack == "V1" || networking_stack == "V1V2" }
-      { "name" : "P2P_ANNOUNCE_PORT", "value" : "${port_node_v1}" },
-      { "name" : "P2P_LISTEN_PORT", "value" : "${port_node_v1}" },
+      %{ if tls_ui_enabled == "true" }
+      { "name" : "TASK_TLS_CERT_PATH", "value" : "${tls_cert_path}" },
+      { "name" : "TASK_TLS_KEY_PATH", "value" : "${tls_key_path}" },
       %{ endif }
-      %{ if networking_stack == "V1V2" || networking_stack == "V2" }
-      { "name" : "P2P_ANNOUNCE_PORT_V2", "value" : "${port_node_v2}" },
-      { "name" : "P2P_LISTEN_PORT_V2", "value" : "${port_node_v2}" },
-      %{ endif }
-      { "name" : "P2P_LISTEN_IP", "value" : "${listen_ip}" },
-      { "name" : "JSON_CONSOLE", "value" : "true" },
-      { "name" : "SUBNET_MAP", "value" : "${subnet_mapping}" }
+      { "name" : "TOML_CONFIG_ENABLED", "value" : "true" }
     ],
     "secrets": [
-      {
-        "name": "KEYSTORE_PASSWORD",
-        "valueFrom": "${keystore_password}"
-      },
       %{ if tls_ui_enabled == "true" }
       {
         "name": "TLS_CERT",
@@ -67,12 +53,12 @@
       },
       %{ endif }
       {
-        "name": "API_CREDENTIALS",
-        "valueFrom": "${api_credentials}"
+        "name": "CONFIG",
+        "valueFrom": "${config}"
       },
       {
-        "name": "DATABASE_URL",
-        "valueFrom": "${database_url}"
+        "name": "SECRETS",
+        "valueFrom": "${secrets}"
       }
     ],
     "logConfiguration": {

@@ -1,12 +1,38 @@
 locals {
   container_insights_monitoring = var.monitoring_enabled ? "enabled" : "disabled"
 
-  node_config = flatten([
-    for key, value in var.node_config : [{
+  env_vars = flatten([
+    for key, value in var.env_vars : [{
       name  = key
       value = value
     }]
   ])
+
+  tf_announce_ips = [
+    for subnet in var.subnet_mapping : subnet.ip
+  ]
+}
+
+# TOML config parse
+data "external" "parse_config" {
+  program = ["python3", "${path.module}/parse_config.py"]
+  query = {
+    tf_announce_ips = join(",", local.tf_announce_ips)
+    config_toml     = var.config_toml
+  }
+}
+
+locals {
+  ui_port          = data.external.parse_config.result.http_port
+  tls_import       = data.external.parse_config.result.tls_import
+  tls_ui_port      = data.external.parse_config.result.https_port
+  tls_cert_path    = data.external.parse_config.result.cert_path
+  tls_key_path     = data.external.parse_config.result.key_path
+  networking_stack = data.external.parse_config.result.networking_stack
+  announce_port_v1 = data.external.parse_config.result.announce_port
+  listen_port_v1   = data.external.parse_config.result.listen_port
+  announce_port_v2 = element(split(":", element(split(",", data.external.parse_config.result.announce_addresses), 0)), 1)
+  listen_port_v2   = element(split(":", data.external.parse_config.result.listen_addresses), 1)
 }
 
 # ECS cluster
@@ -31,27 +57,28 @@ resource "aws_ecs_task_definition" "this" {
   container_definitions = templatefile(
     "${path.module}/templates/node_task_definition.json.tpl",
     {
-      project           = var.project
-      environment       = var.environment
-      docker_image      = "${var.node_image_source}:${var.node_version}"
-      aws_region        = var.aws_region
-      port_ui           = var.chainlink_ui_port
-      tls_port_ui       = var.tls_chainlink_ui_port
-      networking_stack  = var.chainlink_p2p_networking_stack
-      port_node_v1      = var.chainlink_node_port_p2pv1
-      port_node_v2      = var.chainlink_node_port_p2pv2
-      listen_ip         = var.chainlink_listen_ip
-      cpu               = var.task_cpu
-      memory            = var.task_memory
-      keystore_password = var.keystore_password_secret_arn
-      api_credentials   = var.api_credentials_secret_arn
-      database_url      = var.database_url_secret_arn
-      tls_cert          = var.tls_cert_secret_arn
-      tls_key           = var.tls_key_secret_arn
-      tls_ui_enabled    = var.tls_ui_enabled && var.tls_type == "import" ? "true" : "false"
-      node_config       = local.node_config
-      subnet_mapping    = base64encode(jsonencode(var.subnet_mapping))
-      init_script       = replace(file("${path.module}/templates/init_script.sh.tpl"), "\n", " && ")
+      project          = var.project
+      environment      = var.environment
+      docker_image     = "${var.node_image_source}:${var.node_version}"
+      aws_region       = var.aws_region
+      ui_port          = local.ui_port
+      tls_ui_port      = local.tls_ui_port
+      tls_ui_enabled   = local.tls_import
+      networking_stack = local.networking_stack
+      announce_port_v1 = local.announce_port_v1
+      listen_port_v1   = local.listen_port_v1
+      announce_port_v2 = local.announce_port_v2
+      listen_port_v2   = local.listen_port_v2
+      task_cpu         = var.task_cpu
+      task_memory      = var.task_memory
+      tls_cert         = var.tls_cert_secret_arn
+      tls_cert_path    = local.tls_cert_path
+      tls_key          = var.tls_key_secret_arn
+      tls_key_path     = local.tls_key_path
+      env_vars         = local.env_vars
+      config           = aws_secretsmanager_secret.config.arn
+      secrets          = var.secrets_secret_arn
+      init_script      = replace(file("${path.module}/templates/init_script.sh.tpl"), "\n", " && ")
     }
   )
 }
@@ -76,26 +103,26 @@ resource "aws_ecs_service" "this" {
   load_balancer {
     target_group_arn = aws_lb_target_group.ui.arn
     container_name   = "${var.project}-${var.environment}-node"
-    container_port   = var.tls_ui_enabled && var.tls_type == "import" ? var.tls_chainlink_ui_port : var.chainlink_ui_port
+    container_port   = local.tls_import ? local.tls_ui_port : local.ui_port
   }
 
   dynamic "load_balancer" {
-    for_each = var.chainlink_p2p_networking_stack == "V1" || var.chainlink_p2p_networking_stack == "V1V2" ? ["V1"] : []
+    for_each = local.networking_stack == "V1" || local.networking_stack == "V1V2" ? ["V1"] : []
 
     content {
       target_group_arn = aws_lb_target_group.node[0].arn
       container_name   = "${var.project}-${var.environment}-node"
-      container_port   = var.chainlink_node_port_p2pv1
+      container_port   = local.listen_port_v1
     }
   }
 
   dynamic "load_balancer" {
-    for_each = var.chainlink_p2p_networking_stack == "V1V2" || var.chainlink_p2p_networking_stack == "V2" ? ["V2"] : []
+    for_each = local.networking_stack == "V1V2" || local.networking_stack == "V2" ? ["V2"] : []
 
     content {
       target_group_arn = aws_lb_target_group.node_v2[0].arn
       container_name   = "${var.project}-${var.environment}-node"
-      container_port   = var.chainlink_node_port_p2pv2
+      container_port   = local.listen_port_v2
     }
   }
 }
@@ -114,11 +141,11 @@ resource "aws_security_group" "this" {
 }
 
 resource "aws_security_group_rule" "ingress_allow_node" {
-  count = var.chainlink_p2p_networking_stack == "V1" || var.chainlink_p2p_networking_stack == "V1V2" ? 1 : 0
+  count = local.networking_stack == "V1" || local.networking_stack == "V1V2" ? 1 : 0
 
   type        = "ingress"
-  from_port   = var.chainlink_node_port_p2pv1
-  to_port     = var.chainlink_node_port_p2pv1
+  from_port   = local.announce_port_v1
+  to_port     = local.announce_port_v1
   protocol    = "tcp"
   cidr_blocks = ["0.0.0.0/0"]
 
@@ -126,11 +153,11 @@ resource "aws_security_group_rule" "ingress_allow_node" {
 }
 
 resource "aws_security_group_rule" "ingress_allow_node_v2" {
-  count = var.chainlink_p2p_networking_stack == "V1V2" || var.chainlink_p2p_networking_stack == "V2" ? 1 : 0
+  count = local.networking_stack == "V1V2" || local.networking_stack == "V2" ? 1 : 0
 
   type        = "ingress"
-  from_port   = var.chainlink_node_port_p2pv2
-  to_port     = var.chainlink_node_port_p2pv2
+  from_port   = local.announce_port_v2
+  to_port     = local.announce_port_v2
   protocol    = "tcp"
   cidr_blocks = ["0.0.0.0/0"]
 
@@ -139,8 +166,8 @@ resource "aws_security_group_rule" "ingress_allow_node_v2" {
 
 resource "aws_security_group_rule" "ingress_allow_ui" {
   type        = "ingress"
-  from_port   = var.chainlink_ui_port
-  to_port     = var.chainlink_ui_port
+  from_port   = local.ui_port
+  to_port     = local.ui_port
   protocol    = "tcp"
   cidr_blocks = [var.vpc_cidr_block]
 
