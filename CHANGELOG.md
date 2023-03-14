@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.8.0](https://github.com/orionstaking/terraform-aws-chainlink-node/compare/v1.7.1...v1.8.0) (2023-03-14)
+
+
+### Features
+
+* Added support for AWS ACM ([#7](https://github.com/orionstaking/terraform-aws-chainlink-node/issues/7)) ([aabcdb8](https://github.com/orionstaking/terraform-aws-chainlink-node/commit/aabcdb87d9fcb97a449afdc98e3f1b585d3d7771))
+* Migration from env vars to TOML config ([#6](https://github.com/orionstaking/terraform-aws-chainlink-node/issues/6)) ([8b89837](https://github.com/orionstaking/terraform-aws-chainlink-node/commit/8b8983726793119135125798dabcf0e97e056d7d))
+
 ### [1.7.1](https://github.com/ChainOrion/terraform-aws-chainlink-node/compare/v1.7.0...v1.7.1) (2022-12-20)
 
 
