@@ -169,7 +169,7 @@ resource "aws_lb_listener" "node_v2" {
 }
 
 resource "aws_lb_listener" "ui_secure" {
-  count = var.route53_enabled ? 1 : 0 
+  count = var.route53_enabled ? 1 : 0
 
   load_balancer_arn = aws_lb.this.arn
   port              = 443
@@ -183,7 +183,7 @@ resource "aws_lb_listener" "ui_secure" {
 }
 
 resource "aws_route53_record" "this" {
-  count = var.route53_enabled ? 1 : 0 
+  count = var.route53_enabled ? 1 : 0
 
   zone_id = var.route53_zoneid
   name    = "${var.route53_subdomain_name}.${var.route53_domain_name}"
@@ -193,13 +193,13 @@ resource "aws_route53_record" "this" {
 }
 
 module "acm" {
-  count = var.route53_enabled ? 1 : 0 
+  count = var.route53_enabled ? 1 : 0
 
   source  = "terraform-aws-modules/acm/aws"
   version = "~> 4.0"
 
-  domain_name  = "${var.route53_subdomain_name}.${var.route53_domain_name}"
-  zone_id      = var.route53_zoneid
+  domain_name = "${var.route53_subdomain_name}.${var.route53_domain_name}"
+  zone_id     = var.route53_zoneid
 
   wait_for_validation = true
 }
