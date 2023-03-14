@@ -90,15 +90,20 @@ module "chainlink_node" {
       allocation_id = aws_eip.chainlink_p2p[module.vpc.azs[1]].id
     }
   }
+
+  route53_enabled        = true
+  route53_domain_name    = "domain_name.com" # Should be equal to your Route53 Hosted Zone name
+  route53_subdomain_name = "chainlink_eth"   # Will be used to create Route53 record to NLB endpoint with the following format "${var.route53_subdomain_name}.${var.route53_domain_name}"
+  route53_zoneid         = "your_zoneid"     # Route53 hosted zone ID. Nameservers of your zone should be added to your domain registrar before creation. It will be used to create record to NLB and verify ACM certificate using DNS.
 }
 
-# Example: allow access to 6688 port of NLB to grab prometheus metrics (do not use for UI login without TLS enabled)
+# Example: allow access to UI of NLB for login and prometheus metrics
 # resource "aws_security_group_rule" "ingress_allow_ui" {
 #   type        = "ingress"
-#   from_port   = "6688"
-#   to_port     = "6688"
+#   from_port   = "443"
+#   to_port     = "443"
 #   protocol    = "tcp"
-#   cidr_blocks = [var.your]
+#   cidr_blocks = [var.your_ip_range]
 
 #   security_group_id = module.chainlink_node.nlb_security_group_id
 # }
