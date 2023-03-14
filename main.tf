@@ -19,7 +19,7 @@ data "external" "parse_config" {
   query = {
     tf_announce_ips = join(",", local.tf_announce_ips)
     config_toml     = var.config_toml
-    route53_enabled = "${var.route53_enabled}"
+    route53_enabled = var.route53_enabled
   }
 }
 
