@@ -165,6 +165,16 @@ resource "aws_security_group_rule" "ingress_allow_node_v2" {
   security_group_id = aws_security_group.this.id
 }
 
+resource "aws_security_group_rule" "ingress_allow_ui" {
+  type        = "ingress"
+  from_port   = local.ui_port
+  to_port     = local.ui_port
+  protocol    = "tcp"
+  cidr_blocks = [var.vpc_cidr_block]
+
+  security_group_id = aws_security_group.this.id
+}
+
 resource "aws_security_group_rule" "egress_allow_all" {
   type        = "egress"
   from_port   = 0
