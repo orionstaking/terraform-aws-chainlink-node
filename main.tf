@@ -19,6 +19,7 @@ data "external" "parse_config" {
   query = {
     tf_announce_ips = join(",", local.tf_announce_ips)
     config_toml     = var.config_toml
+    route53_enabled = "${var.route53_enabled}"
   }
 }
 
@@ -160,16 +161,6 @@ resource "aws_security_group_rule" "ingress_allow_node_v2" {
   to_port     = local.announce_port_v2
   protocol    = "tcp"
   cidr_blocks = ["0.0.0.0/0"]
-
-  security_group_id = aws_security_group.this.id
-}
-
-resource "aws_security_group_rule" "ingress_allow_ui" {
-  type        = "ingress"
-  from_port   = local.ui_port
-  to_port     = local.ui_port
-  protocol    = "tcp"
-  cidr_blocks = [var.vpc_cidr_block]
 
   security_group_id = aws_security_group.this.id
 }

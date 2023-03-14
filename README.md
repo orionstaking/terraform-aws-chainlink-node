@@ -39,12 +39,10 @@ module "chainlink_node" {
   vpc_cidr_block      = module.vpc.vpc_cidr_block
   vpc_private_subnets = module.vpc.private_subnets
 
-  keystore_password_secret_arn = aws_secretsmanager_secret.keystore.arn
-  api_credentials_secret_arn   = aws_secretsmanager_secret.api.arn
-  database_url_secret_arn      = aws_secretsmanager_secret.db.arn
+  secrets_secret_arn = aws_secretsmanager_secret.secrets.arn
 
   # Always check latest versions
-  node_version        = "1.11.0"
+  node_version        = "1.12.0"
   task_cpu            = 1024
   task_memory         = 2048
   subnet_mapping      = {
@@ -59,6 +57,11 @@ module "chainlink_node" {
       allocation_id = aws_eip.chainlink_p2p[module.vpc.azs[1]].id
     }
   }
+
+  route53_enabled = true
+  route53_domain_name = "domain_name.com"
+  route53_subdomain_name = "chainlink_eth"
+  route53_zoneid = "your_zoneid"
 }
 ```
 
@@ -97,17 +100,16 @@ This module will check provided values and you will see an error if you specifie
 
 Check example with properly set `subnet_mapping` terraform module variable [here](https://github.com/orionterra/terraform-aws-chainlink-node/tree/main/examples/complete_example).
 
-### TLS Support
+### TLS & HTTPS Support
 
-ATM, module supports imported TLS as described [here](https://docs.chain.link/chainlink-nodes/enabling-https-connections). AWS ACM ('acm') isn't supported yet.
+Module support two types of configuration to secure UI connection
 
-Check example with imported TLS configuration [here](https://github.com/orionterra/terraform-aws-chainlink-node/tree/main/examples/imported_tls_example)
+- AWS ACM (recommended). This option requires configured Route53 hosted zone to create records for AWS NLB and AWS ACM certificate validation. Check example [here](https://github.com/orionterra/terraform-aws-chainlink-node/tree/main/examples/complete_example).
+- Imported TLS as described [here](https://docs.chain.link/chainlink-nodes/enabling-https-connections) (deprecated).This option requires providing AWS Secrets Manager ARN's with self signed TLS key and certificate. Check example with imported TLS configuration [here](https://github.com/orionterra/terraform-aws-chainlink-node/tree/main/examples/imported_tls_example).
 
 ### UI Access
 
-Chainlink user interface port (6688 by default for http and 6689 for https) is open only to the VPC CIDR block. In order to access the UI it's required to add AWS security group ingress rule or open a SSH tunnel to any available host/bastion in the VPC.
-
-Example: `ssh -i $KEY ${USER}@${VPC_HOST_PUBLIC_IP} -L 6689:${NLB_ENDPOINT}:6689 -N`
+By default security group connected to NLB allows only p2p connections for chainlink node.In order to access the UI it's required to add AWS security group ingress rule for required IP range or ranges. Check example [here](https://github.com/orionterra/terraform-aws-chainlink-node/tree/main/examples/complete_example)
 
 ### Notifications
 
@@ -126,7 +128,7 @@ Create AWS Secrets Manager objects first by commenting out the section with modu
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.12.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.40.0 |
 | <a name="requirement_external"></a> [external](#requirement\_external) | 2.2.3 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | 3.4.3 |
 
@@ -134,13 +136,15 @@ Create AWS Secrets Manager objects first by commenting out the section with modu
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.12.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.40.0 |
 | <a name="provider_external"></a> [external](#provider\_external) | 2.2.3 |
 | <a name="provider_random"></a> [random](#provider\_random) | 3.4.3 |
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_acm"></a> [acm](#module\_acm) | terraform-aws-modules/acm/aws | ~> 4.0 |
 
 ## Resources
 
@@ -162,16 +166,17 @@ No modules.
 | [aws_lb_listener.node](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
 | [aws_lb_listener.node_v2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
 | [aws_lb_listener.ui](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
+| [aws_lb_listener.ui_secure](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
 | [aws_lb_target_group.node](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
 | [aws_lb_target_group.node_v2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
 | [aws_lb_target_group.ui](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
+| [aws_route53_record.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
 | [aws_secretsmanager_secret.config](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
 | [aws_secretsmanager_secret_version.config](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
 | [aws_security_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_security_group_rule.egress_allow_all](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [aws_security_group_rule.ingress_allow_node](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [aws_security_group_rule.ingress_allow_node_v2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
-| [aws_security_group_rule.ingress_allow_ui](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [aws_sns_topic.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic) | resource |
 | [random_string.alb_prefix_node](https://registry.terraform.io/providers/hashicorp/random/3.4.3/docs/resources/string) | resource |
 | [random_string.alb_prefix_node_v2](https://registry.terraform.io/providers/hashicorp/random/3.4.3/docs/resources/string) | resource |
@@ -192,6 +197,10 @@ No modules.
 | <a name="input_node_image_source"></a> [node\_image\_source](#input\_node\_image\_source) | Chainlink node docker image source. This variable can be used to rewrite default image source. Used AWS registry by default. Set to `smartcontract/chainlink` to use dockerhub registry | `string` | `"public.ecr.aws/chainlink/chainlink"` | no |
 | <a name="input_node_version"></a> [node\_version](#input\_node\_version) | Chainlink node version. The latest version could be found here: https://hub.docker.com/r/smartcontract/chainlink/tags | `string` | n/a | yes |
 | <a name="input_project"></a> [project](#input\_project) | Project name | `string` | n/a | yes |
+| <a name="input_route53_domain_name"></a> [route53\_domain\_name](#input\_route53\_domain\_name) | Domain name that is used in your AWS Route53 hosted zone. Nameservers of your zone should be added to your domain registrar before creation. It will be used to create record to NLB and verify ACM certificate using DNS | `string` | `""` | no |
+| <a name="input_route53_enabled"></a> [route53\_enabled](#input\_route53\_enabled) | Defines if AWS Route53 record and AWS ACM certificate for UI access should be created. Nameservers of your zone should be added to your domain registrar before creation. It will be used to create record to NLB and verify ACM certificate using DNS | `bool` | `false` | no |
+| <a name="input_route53_subdomain_name"></a> [route53\_subdomain\_name](#input\_route53\_subdomain\_name) | Subdomain name that will be used to create Route53 record to NLB endpoint with the following format: $var.route53\_subdomain\_name.$var.route53\_domain\_name | `string` | `""` | no |
+| <a name="input_route53_zoneid"></a> [route53\_zoneid](#input\_route53\_zoneid) | Route53 hosted zone id. Nameservers of your zone should be added to your domain registrar before creation. It will be used to create record to NLB and verify ACM certificate using DNS | `string` | `""` | no |
 | <a name="input_secrets_secret_arn"></a> [secrets\_secret\_arn](#input\_secrets\_secret\_arn) | ARN of the Secrets Manager Secret in the same AWS account and Region that contains TOML secrets for Chainlink Node (base64 encoded). See https://github.com/smartcontractkit/chainlink/blob/v1.11.0/docs/SECRETS.md on github to learn more. | `string` | n/a | yes |
 | <a name="input_sns_topic_arn"></a> [sns\_topic\_arn](#input\_sns\_topic\_arn) | SNS topic arn for alerts. If not specified, module will create an empty topic and provide topic arn in the output. Then it will be possible to specify required notification method for this topic | `string` | `""` | no |
 | <a name="input_subnet_mapping"></a> [subnet\_mapping](#input\_subnet\_mapping) | A map of values required to enable failover between AZs. See an example in ./examples directory | `map(any)` | n/a | yes |

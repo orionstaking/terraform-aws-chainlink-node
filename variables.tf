@@ -102,3 +102,27 @@ variable "tls_key_secret_arn" {
   type        = string
   default     = ""
 }
+
+variable "route53_enabled" {
+  description = "Defines if AWS Route53 record and AWS ACM certificate for UI access should be created. Nameservers of your zone should be added to your domain registrar before creation. It will be used to create record to NLB and verify ACM certificate using DNS"
+  type        = bool
+  default     = false
+}
+
+variable "route53_zoneid" {
+  description = "Route53 hosted zone id. Nameservers of your zone should be added to your domain registrar before creation. It will be used to create record to NLB and verify ACM certificate using DNS"
+  type        = string
+  default     = ""
+}
+
+variable "route53_domain_name" {
+  description = "Domain name that is used in your AWS Route53 hosted zone. Nameservers of your zone should be added to your domain registrar before creation. It will be used to create record to NLB and verify ACM certificate using DNS"
+  type        = string
+  default     = ""
+}
+
+variable "route53_subdomain_name" {
+  description = "Subdomain name that will be used to create Route53 record to NLB endpoint with the following format: $var.route53_subdomain_name.$var.route53_domain_name"
+  type        = string
+  default     = ""
+}

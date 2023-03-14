@@ -130,6 +130,8 @@ resource "aws_lb_target_group" "node_v2" {
 }
 
 resource "aws_lb_listener" "ui" {
+  count = var.route53_enabled ? 0 : 1
+
   load_balancer_arn = aws_lb.this.arn
   port              = local.tls_import ? local.tls_ui_port : local.ui_port
   protocol          = "TCP"
@@ -164,4 +166,40 @@ resource "aws_lb_listener" "node_v2" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.node_v2[0].arn
   }
+}
+
+resource "aws_lb_listener" "ui_secure" {
+  count = var.route53_enabled ? 1 : 0 
+
+  load_balancer_arn = aws_lb.this.arn
+  port              = 443
+  protocol          = "TLS"
+  certificate_arn   = module.acm[0].acm_certificate_arn
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.ui.arn
+  }
+}
+
+resource "aws_route53_record" "this" {
+  count = var.route53_enabled ? 1 : 0 
+
+  zone_id = var.route53_zoneid
+  name    = "${var.route53_subdomain_name}.${var.route53_domain_name}"
+  type    = "CNAME"
+  ttl     = 300
+  records = [aws_lb.this.dns_name]
+}
+
+module "acm" {
+  count = var.route53_enabled ? 1 : 0 
+
+  source  = "terraform-aws-modules/acm/aws"
+  version = "~> 4.0"
+
+  domain_name  = "${var.route53_subdomain_name}.${var.route53_domain_name}"
+  zone_id      = var.route53_zoneid
+
+  wait_for_validation = true
 }

@@ -63,7 +63,7 @@ def parse_config(config):
     except KeyError:
         key_err_msg("WebServer.HTTPPort")
 
-    if 'TLS' in config['WebServer']:
+    if 'TLS' in config['WebServer'] and route53_enabled != "true" and config['WebServer']['TLS']['HTTPSPort'] != 0 :
         tls_import = "true"
         try:
             https_port = config['WebServer']['TLS']['HTTPSPort']
@@ -152,6 +152,7 @@ if __name__ == "__main__":
     # parse input from terraform
     input_json = json.loads(sys.stdin.read())
     tf_announce_ips = input_json.get("tf_announce_ips").split(",")
+    route53_enabled = input_json.get("route53_enabled")
     config_base64_string = input_json.get("config_toml")
     config_base64_bytes = config_base64_string.encode("ascii")
     config_bytes = base64.b64decode(config_base64_bytes)
