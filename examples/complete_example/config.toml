@@ -10,6 +10,9 @@ AllowOrigins = '*'
 HTTPPort = 6688
 SecureCookies = false
 
+[WebServer.TLS]
+HTTPSPort = 0
+
 [OCR]
 Enabled = true
 KeyBundleID = 'KeyBundleID'
