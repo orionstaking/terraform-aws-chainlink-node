@@ -3,10 +3,11 @@
 Terraform module which creates AWS serverless infra for Chainlink Node:
   - AWS Fargate
   - AWS Network Load Balancer
+  - AWS Route53&ACM (optional, if enabled)
   - AWS IAM
-  - AWS CloudWatch
+  - AWS CloudWatch (optional, if monitoring is enabled)
 
-Terraform module for Chainlink External Adapters: [here](https://github.com/orionterra/terraform-aws-chainlink-ea)
+Module could be used independently or together with [Chainlink External Adapters module](https://github.com/orionterra/terraform-aws-chainlink-ea)
 
 ## Architecture overview
 
