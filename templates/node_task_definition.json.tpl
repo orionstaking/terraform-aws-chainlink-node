@@ -12,13 +12,7 @@
         "hostPort": ${tls_ui_port}
       },
       %{ endif }
-      %{ if networking_stack == "V1" || networking_stack == "V1V2" }
-      {
-        "containerPort": ${listen_port_v1},
-        "hostPort": ${announce_port_v1}
-      },
-      %{ endif }
-      %{ if networking_stack == "V1V2" || networking_stack == "V2" }
+      %{ if networking_stack == "V2" }
       {
         "containerPort": ${listen_port_v2},
         "hostPort": ${announce_port_v2}

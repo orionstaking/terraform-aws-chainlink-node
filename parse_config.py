@@ -86,48 +86,19 @@ def parse_config(config):
         secure_cookies = "false"
 
     try:
-        p2p_v1 = config['P2P']['V1']['Enabled']
-    except KeyError:
-        pass
-
-    try:
         p2p_v2 = config['P2P']['V2']['Enabled']
     except KeyError:
-        pass
+        p2p_v2 = False
 
-    if p2p_v1 and not p2p_v2:
-        p2p_networking = "V1"
-        try:
-            announce_ip = verify_announce_ip(config['P2P']['V1']['AnnounceIP'], tf_announce_ips)
-            announce_port = config['P2P']['V1']['AnnouncePort']
-            listen_ip = verify_listen_ip(config['P2P']['V1']['ListenIP'])
-            listen_port = config['P2P']['V1']['ListenPort']
-            announce_addresses = ""
-            listen_addresses = ""
-        except KeyError:
-            key_err_msg("P2P.V1.AnnounceIP, P2P.V1.AnnouncePort, P2P.V1.ListenIP, P2P.V1.ListenPort")
-    elif p2p_v2 and not p2p_v1:
+    if p2p_v2:
         p2p_networking = "V2"
         try:
-            announce_ip = ""
-            announce_port = ""
-            listen_ip = ""
-            listen_port = ""
             announce_addresses = verify_announce_addresses(config['P2P']['V2']['AnnounceAddresses'], tf_announce_ips)
             listen_addresses = verify_listen_addresses(config['P2P']['V2']['ListenAddresses'])
         except KeyError:
             key_err_msg("P2P.V2.AnnounceAddresses, P2P.V2.ListenAddresses")
-    elif p2p_v1 and p2p_v2:
-        p2p_networking = "V1V2"
-        try:
-            announce_ip = verify_announce_ip(config['P2P']['V1']['AnnounceIP'], tf_announce_ips)
-            announce_port = config['P2P']['V1']['AnnouncePort']
-            listen_ip = verify_listen_ip(config['P2P']['V1']['ListenIP'])
-            listen_port = config['P2P']['V1']['ListenPort']
-            announce_addresses = verify_announce_addresses(config['P2P']['V2']['AnnounceAddresses'], tf_announce_ips)
-            listen_addresses = verify_listen_addresses(config['P2P']['V2']['ListenAddresses'])
-        except KeyError:
-            key_err_msg("P2P.V1.AnnounceIP, P2P.V1.AnnouncePort, P2P.V1.ListenIP, P2P.V1.ListenPort, P2P.V2.AnnounceAddresses, P2P.V2.ListenAddresses")
+    else:
+        sys.exit("P2P V2 Networking should be enabled in config.toml")
 
     output = {
         "http_port": str(http_port),
@@ -137,10 +108,6 @@ def parse_config(config):
         "key_path": key_path,
         "secure_cookies": str(secure_cookies),
         "networking_stack": p2p_networking,
-        "announce_ip": announce_ip,
-        "announce_port": str(announce_port),
-        "listen_ip": listen_ip,
-        "listen_port": str(listen_port),
         "announce_addresses": ','.join(announce_addresses),
         "listen_addresses": ','.join(listen_addresses)
     }

@@ -97,7 +97,7 @@ Check example [here](https://github.com/orionterra/terraform-aws-chainlink-node/
 
 Chainlink Node failover is realized using `AnnounceAddresses` in P2P.V2 in your config.toml file. Please specify the same IP's as you have in `subnet_mapping` terraform variable. In case of one of AWS availability zone failure, Fargate will drain node container in one az and run a new one in another based on NLB target group health checks.
 
-This module will check provided values and you will see an error if you specified different IP addresses. Failover is only available for `V2` or `V1V2` networking stack.
+This module will check provided values and you will see an error if you specified different IP addresses.
 
 Check example with properly set `subnet_mapping` terraform module variable [here](https://github.com/orionterra/terraform-aws-chainlink-node/tree/main/examples/complete_example).
 

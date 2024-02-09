@@ -23,14 +23,6 @@ TransmitterAddress = 'TransmitterAddress'
 [P2P]
 PeerID = 'PeerID'
 
-[P2P.V1]
-Enabled = true
-AnnounceIP = 'ip_from_chainlink_p2p_ips_output' # set one ip from the chainlink_p2p_ips output list
-AnnouncePort = 16789
-DefaultBootstrapPeers = ['DefaultBootstrapPeers']
-ListenIP = '0.0.0.0'
-ListenPort = 16789
-
 [P2P.V2]
 Enabled = true
 AnnounceAddresses = ['ip_from_chainlink_p2p_ips_output:15678', 'ip_from_chainlink_p2p_ips_output:15678'] # set ip's from the chainlink_p2p_ips output list
