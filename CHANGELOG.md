@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.9.0](https://github.com/orionstaking/terraform-aws-chainlink-node/compare/v1.8.0...v1.9.0) (2024-02-09)
+
+
+### Features
+
+* Disable p2pv1 networking option ([#10](https://github.com/orionstaking/terraform-aws-chainlink-node/issues/10)) ([f986a38](https://github.com/orionstaking/terraform-aws-chainlink-node/commit/f986a389756cb0f4545f718f64858ac44cca0704))
+
+
+### Bug Fixes
+
+* Update config.toml in the example [skip ci] ([#8](https://github.com/orionstaking/terraform-aws-chainlink-node/issues/8)) ([791794a](https://github.com/orionstaking/terraform-aws-chainlink-node/commit/791794ac6c0ba3c4ec960a1dce184ec1dd0924bd))
+
 ## [1.8.0](https://github.com/orionstaking/terraform-aws-chainlink-node/compare/v1.7.1...v1.8.0) (2023-03-14)
 
 
