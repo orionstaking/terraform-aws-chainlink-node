@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.9.1](https://github.com/orionstaking/terraform-aws-chainlink-node/compare/v1.9.0...v1.9.1) (2024-03-14)
+
+
+### Bug Fixes
+
+* Enabling cross zone load balancing ([#11](https://github.com/orionstaking/terraform-aws-chainlink-node/issues/11)) ([742b349](https://github.com/orionstaking/terraform-aws-chainlink-node/commit/742b3494cad849f86985a0063d1b0f3a73b76556))
+
 ## [1.9.0](https://github.com/orionstaking/terraform-aws-chainlink-node/compare/v1.8.0...v1.9.0) (2024-02-09)
 
 
