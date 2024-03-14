@@ -3,6 +3,8 @@ resource "aws_lb" "this" {
   internal           = false
   load_balancer_type = "network"
 
+  enable_cross_zone_load_balancing = true
+
   dynamic "subnet_mapping" {
     for_each = { for subnet_map in var.subnet_mapping : subnet_map.subnet_id => subnet_map }
     content {
