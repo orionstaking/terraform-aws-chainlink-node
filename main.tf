@@ -76,6 +76,8 @@ resource "aws_ecs_task_definition" "this" {
       config           = aws_secretsmanager_secret.config.arn
       secrets          = var.secrets_secret_arn
       init_script      = replace(file("${path.module}/templates/init_script.sh.tpl"), "\n", " && ")
+      otel_init_script = replace(file("${path.module}/templates/otel_init_script.sh.tpl"), "\n", " && ")
+      otel_config      = aws_secretsmanager_secret.otel_config.arn
     }
   )
 }
@@ -117,6 +119,12 @@ resource "aws_ecs_service" "this" {
 # Log groups to store logs from Node
 resource "aws_cloudwatch_log_group" "this" {
   name              = "/aws/ecs/${var.project}-${var.environment}-node"
+  retention_in_days = 7
+}
+
+# Log groups to store logs from OTEL
+resource "aws_cloudwatch_log_group" "otel" {
+  name              = "/aws/ecs/${var.project}-${var.environment}-otel"
   retention_in_days = 7
 }
 

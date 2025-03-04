@@ -32,6 +32,7 @@ data "aws_iam_policy_document" "this" {
     ]
     resources = [
       aws_secretsmanager_secret.config.arn,
+      aws_secretsmanager_secret.otel_config.arn,
       var.secrets_secret_arn
     ]
   }

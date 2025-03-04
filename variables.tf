@@ -85,6 +85,11 @@ variable "config_toml" {
   type        = string
 }
 
+variable "otel_config" {
+  description = "Base64 encoded OpenTelemetry collector configuration"
+  type        = string
+}
+
 # Secrets configutation
 variable "secrets_secret_arn" {
   description = "ARN of the Secrets Manager Secret in the same AWS account and Region that contains TOML secrets for Chainlink Node (base64 encoded). See https://github.com/smartcontractkit/chainlink/blob/v1.11.0/docs/SECRETS.md on github to learn more."
