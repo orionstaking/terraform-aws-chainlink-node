@@ -90,6 +90,11 @@
         "containerPort": 55679,
         "hostPort": 55679,
         "protocol": "tcp"
+      },
+      {
+        "containerPort": 8888,
+        "hostPort": 8888,
+        "protocol": "tcp"
       }
     ],
     "entryPoint": ["/bin/bash"],

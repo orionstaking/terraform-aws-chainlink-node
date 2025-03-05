@@ -105,6 +105,18 @@ resource "aws_ecs_service" "this" {
     container_port   = local.tls_import ? local.tls_ui_port : local.ui_port
   }
 
+  load_balancer {
+    target_group_arn = aws_lb_target_group.otel_health.arn
+    container_name   = "${var.project}-${var.environment}-otel"
+    container_port   = 13133
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.otel_metrics.arn
+    container_name   = "${var.project}-${var.environment}-otel"
+    container_port   = 8888
+  }
+
   dynamic "load_balancer" {
     for_each = local.networking_stack == "V2" ? ["V2"] : []
 
@@ -133,6 +145,26 @@ resource "aws_security_group" "this" {
   name        = "${var.project}-${var.environment}-node-ecs-tasks"
   description = "Allow trafic between alb and Chainlink Node"
   vpc_id      = var.vpc_id
+}
+
+resource "aws_security_group_rule" "ingress_allow_otel_health" {
+  type        = "ingress"
+  from_port   = 13133
+  to_port     = 13133
+  protocol    = "tcp"
+  cidr_blocks = [var.vpc_cidr_block]
+
+  security_group_id = aws_security_group.this.id
+}
+
+resource "aws_security_group_rule" "ingress_allow_otel_metrics" {
+  type        = "ingress"
+  from_port   = 8888
+  to_port     = 8888
+  protocol    = "tcp"
+  cidr_blocks = [var.vpc_cidr_block]
+
+  security_group_id = aws_security_group.this.id
 }
 
 resource "aws_security_group_rule" "ingress_allow_node_v2" {

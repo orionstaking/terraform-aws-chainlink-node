@@ -42,6 +42,28 @@ resource "random_string" "alb_prefix_node_v2" {
   special = false
 }
 
+resource "random_string" "alb_prefix_otel" {
+  keepers = {
+    # Generate a new id each time we change port
+    port = 13133
+  }
+
+  length  = 2
+  upper   = false
+  special = false
+}
+
+resource "random_string" "alb_prefix_otel_metrics" {
+  keepers = {
+    # Generate a new id each time we change port
+    port = 8888
+  }
+
+  length  = 2
+  upper   = false
+  special = false
+}
+
 resource "aws_lb_target_group" "ui" {
   name                 = "chainlink-${var.environment}-ui-${random_string.alb_prefix_ui.result}"
   port                 = local.tls_import ? local.tls_ui_port : local.ui_port
@@ -133,11 +155,93 @@ resource "aws_lb_listener" "ui_secure" {
   }
 }
 
+# TLS listener for OTEL metrics endpoint
+resource "aws_lb_listener" "otel_metrics" {
+  count = var.route53_enabled ? 1 : 0
+
+  load_balancer_arn = aws_lb.this.arn
+  port              = 8443
+  protocol          = "TLS"
+  certificate_arn   = module.acm_otel[0].acm_certificate_arn
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.otel_metrics.arn
+  }
+}
+
+# TLS listener for OTEL health endpoint
+resource "aws_lb_listener" "otel_health" {
+  count = var.route53_enabled ? 1 : 0
+
+  load_balancer_arn = aws_lb.this.arn
+  port              = 8444
+  protocol          = "TLS"
+  certificate_arn   = module.acm_otel[0].acm_certificate_arn
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.otel_health.arn
+  }
+}
+
+# Target group for OTEL health endpoint
+resource "aws_lb_target_group" "otel_health" {
+  name        = "chainlink-${var.environment}-otel-${random_string.alb_prefix_otel.result}"
+  port        = 13133
+  protocol    = "TCP"
+  target_type = "ip"
+  vpc_id      = var.vpc_id
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    interval            = 30
+    matcher            = "200"
+    path               = "/health/status"
+    port               = "traffic-port"
+    protocol           = "HTTP"
+    timeout            = 5
+    unhealthy_threshold = 2
+  }
+}
+
+# Target group for OTEL metrics endpoint
+resource "aws_lb_target_group" "otel_metrics" {
+  name        = "chainlink-${var.environment}-otel-m-${random_string.alb_prefix_otel_metrics.result}"
+  port        = 8888
+  protocol    = "TCP"
+  target_type = "ip"
+  vpc_id      = var.vpc_id
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    interval            = 30
+    matcher            = "200"
+    path               = "/metrics"
+    port               = "traffic-port"
+    protocol           = "HTTP"
+    timeout            = 5
+    unhealthy_threshold = 2
+  }
+}
+
 resource "aws_route53_record" "this" {
   count = var.route53_enabled ? 1 : 0
 
   zone_id = var.route53_zoneid
   name    = "${var.route53_subdomain_name}.${var.route53_domain_name}"
+  type    = "CNAME"
+  ttl     = 300
+  records = [aws_lb.this.dns_name]
+}
+
+resource "aws_route53_record" "otel" {
+  count = var.route53_enabled ? 1 : 0
+
+  zone_id = var.route53_zoneid
+  name    = "${var.route53_subdomain_name}.otel.${var.route53_domain_name}"
   type    = "CNAME"
   ttl     = 300
   records = [aws_lb.this.dns_name]
@@ -150,6 +254,18 @@ module "acm" {
   version = "~> 4.0"
 
   domain_name = "${var.route53_subdomain_name}.${var.route53_domain_name}"
+  zone_id     = var.route53_zoneid
+
+  wait_for_validation = true
+}
+
+module "acm_otel" {
+  count = var.route53_enabled ? 1 : 0
+
+  source  = "terraform-aws-modules/acm/aws"
+  version = "~> 4.0"
+
+  domain_name = "${var.route53_subdomain_name}.otel.${var.route53_domain_name}"
   zone_id     = var.route53_zoneid
 
   wait_for_validation = true
