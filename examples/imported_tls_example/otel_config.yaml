@@ -1,0 +1,50 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+        include_metadata: true
+
+exporters:
+  otlphttp:
+    endpoint: https://paste.telemetry.endpoint.here:443
+    tls:
+      insecure: false
+    auth:
+      authenticator: headers_setter
+
+processors:
+  batch:
+    send_batch_size: 512
+    timeout: 5s
+    metadata_keys:
+      - X-Beholder-Node-Auth-Token
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+    path: /health/status
+  headers_setter:
+    headers:
+      - action: insert
+        key: X-Beholder-Node-Auth-Token
+        from_context: X-Beholder-Node-Auth-Token
+
+service:
+  extensions: [health_check, headers_setter]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlphttp]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlphttp]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlphttp]
+  telemetry:
+    metrics:
+      level: detailed
