@@ -78,6 +78,7 @@ module "chainlink_node" {
   task_cpu     = 1024
   task_memory  = 2048
   config_toml  = filebase64("config.toml")
+  otel_config  = filebase64("otel_config.yaml")
   subnet_mapping = {
     (module.vpc.azs[0]) = {
       ip            = aws_eip.chainlink_p2p[module.vpc.azs[0]].public_ip
