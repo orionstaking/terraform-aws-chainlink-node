@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0](https://github.com/orionstaking/terraform-aws-chainlink-node/compare/v1.10.0...v2.0.0) (2026-11-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* config_toml, secrets_secret_arn, tls_cert_secret_arn, and tls_key_secret_arn are removed. config.toml and secrets.toml must live in Secrets Manager. P2P V1 resources no longer use count; moved blocks keep the existing listener, target group, security group rule, and name suffix.
+
+### Features
+
+* Require Secrets Manager config and drop P2P V1 and self-signed ertificates ([#14](https://github.com/orionstaking/terraform-aws-chainlink-node/issues/14)) ([77d16cf](https://github.com/orionstaking/terraform-aws-chainlink-node/commit/77d16cfd312b525eac55d4fe5b06aa6e0dac2959))
+
 ## [1.10.0](https://github.com/orionstaking/terraform-aws-chainlink-node/compare/v1.9.1...v1.10.0) (2025-10-29)
 
 
