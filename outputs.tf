@@ -9,7 +9,7 @@ output "subnet_mapping" {
 }
 
 output "nlb_endpoint" {
-  description = "NLB endpoint to accsess Chainlink Node UI. UI port is open only to the VPC CIDR block, in order to access the UI it's required to open SSH tunnel to any available host/bastion in the VPC. More info in Readme.md"
+  description = "NLB endpoint for the Chainlink node UI. Pass operator CIDRs in ingress_whitelist. Set allow_ui_from_vpc to also allow the VPC CIDR."
   value       = "${aws_lb.this.dns_name}:6688"
 }
 
@@ -19,6 +19,6 @@ output "validate_task_definition_family" {
 }
 
 output "nlb_security_group_id" {
-  description = "ID of security group attached to NLB. It's possible to use it to configure additional sg inbound rules"
+  description = "ID of the node task security group. ingress_whitelist adds its rules here."
   value       = aws_security_group.this.id
 }

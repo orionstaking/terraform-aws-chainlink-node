@@ -106,15 +106,9 @@ module "chainlink_node" {
   route53_domain_name    = "domain_name.com" # Should be equal to your Route53 Hosted Zone name
   route53_subdomain_name = "chainlink_eth"   # Will be used to create Route53 record to NLB endpoint with the following format "${var.route53_subdomain_name}.${var.route53_domain_name}"
   route53_zoneid         = "your_zoneid"     # Route53 hosted zone ID. Nameservers of your zone should be added to your domain registrar before creation. It will be used to create record to NLB and verify ACM certificate using DNS.
+
+  # ingress_whitelist = [
+  #   { cidr = "203.0.113.10/32", description = "Operator", access = ["ui"] },
+  #   { cidr = "203.0.113.20/32", description = "Prometheus", access = ["otel_metrics"] },
+  # ]
 }
-
-# Example: allow access to UI of NLB for login and prometheus metrics
-# resource "aws_security_group_rule" "ingress_allow_ui" {
-#   type        = "ingress"
-#   from_port   = "443"
-#   to_port     = "443"
-#   protocol    = "tcp"
-#   cidr_blocks = [var.your_ip_range]
-
-#   security_group_id = module.chainlink_node.nlb_security_group_id
-# }

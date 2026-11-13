@@ -181,11 +181,12 @@ resource "aws_lb_listener" "otel_health" {
 
 # Target group for OTEL health endpoint
 resource "aws_lb_target_group" "otel_health" {
-  name        = "chainlink-${var.environment}-otel-${random_string.alb_prefix_otel.result}"
-  port        = 13133
-  protocol    = "TCP"
-  target_type = "ip"
-  vpc_id      = var.vpc_id
+  name               = "chainlink-${var.environment}-otel-${random_string.alb_prefix_otel.result}"
+  port               = 13133
+  protocol           = "TCP"
+  target_type        = "ip"
+  vpc_id             = var.vpc_id
+  preserve_client_ip = true
 
   health_check {
     enabled             = true
@@ -202,11 +203,12 @@ resource "aws_lb_target_group" "otel_health" {
 
 # Target group for OTEL metrics endpoint
 resource "aws_lb_target_group" "otel_metrics" {
-  name        = "chainlink-${var.environment}-otel-m-${random_string.alb_prefix_otel_metrics.result}"
-  port        = 8888
-  protocol    = "TCP"
-  target_type = "ip"
-  vpc_id      = var.vpc_id
+  name               = "chainlink-${var.environment}-otel-m-${random_string.alb_prefix_otel_metrics.result}"
+  port               = 8888
+  protocol           = "TCP"
+  target_type        = "ip"
+  vpc_id             = var.vpc_id
+  preserve_client_ip = true
 
   health_check {
     enabled             = true
