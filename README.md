@@ -15,10 +15,10 @@ Module could be used independently or together with [Chainlink External Adapters
 
 Where:
 
-- ![#DAE8FC](https://via.placeholder.com/15/DAE8FC/DAE8FC.png) Covered by this Chainlink Node terraform [module](https://github.com/orionterra/terraform-aws-chainlink-node)
-- ![#D5E8D4](https://via.placeholder.com/15/D5E8D4/D5E8D4.png) Covered by Chainlink External Adapters terraform [module](https://github.com/orionterra/terraform-aws-chainlink-ea)
-- ![#D0CEE2](https://via.placeholder.com/15/D0CEE2/D0CEE2.png) Covered by RDS community terraform [module](https://github.com/terraform-aws-modules/terraform-aws-rds-aurora)
-- ![#FFE6CC](https://via.placeholder.com/15/FFE6CC/FFE6CC.png) Covered by VPC community terraform [module](https://github.com/terraform-aws-modules/terraform-aws-vpc)
+- ![#DAE8FC](https://placehold.co/15x15/DAE8FC/DAE8FC.png) Covered by this Chainlink Node terraform [module](https://github.com/orionterra/terraform-aws-chainlink-node)
+- ![#D5E8D4](https://placehold.co/15x15/D5E8D4/D5E8D4.png) Covered by Chainlink External Adapters terraform [module](https://github.com/orionterra/terraform-aws-chainlink-ea)
+- ![#D0CEE2](https://placehold.co/15x15/D0CEE2/D0CEE2.png) Covered by RDS community terraform [module](https://github.com/terraform-aws-modules/terraform-aws-rds-aurora)
+- ![#FFE6CC](https://placehold.co/15x15/FFE6CC/FFE6CC.png) Covered by VPC community terraform [module](https://github.com/terraform-aws-modules/terraform-aws-vpc)
 
 ## Usage
 
