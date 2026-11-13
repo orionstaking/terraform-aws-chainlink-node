@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0](https://github.com/orionstaking/terraform-aws-chainlink-node/compare/v2.0.0...v2.1.0) (2026-11-13)
+
+
+### Features
+
+* Restrict task ingress to NLB subnets and a whitelist ([#15](https://github.com/orionstaking/terraform-aws-chainlink-node/issues/15)) ([1ff7ce4](https://github.com/orionstaking/terraform-aws-chainlink-node/commit/1ff7ce47d449a5d38ce3ef7dd7ca5398f67e3297))
+
 ## [2.0.0](https://github.com/orionstaking/terraform-aws-chainlink-node/compare/v1.10.0...v2.0.0) (2026-11-13)
 
 
