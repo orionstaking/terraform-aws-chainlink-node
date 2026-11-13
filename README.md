@@ -107,13 +107,17 @@ P2P V1 and the imported TLS certificate inputs (`tls_cert_secret_arn`, `tls_key_
 
 `config_toml` and `secrets_secret_arn` are removed. Before applying, create Secrets Manager secrets that hold config.toml and secrets.toml and pass `config_plain_secret_arn` and `secrets_plain_secret_arn`. The values are the files themselves. The module deletes the config secret it used to create. Plan reads the config secret only to learn the ports, so that secret has to exist before the first plan. The module also creates a task definition that runs `chainlink node validate`.
 
+The UI and OTEL task security group rules no longer allow the whole VPC CIDR. They allow the NLB subnets. Set `allow_ui_from_vpc` to keep the old UI access, and move any extra client CIDRs into `ingress_whitelist`.
+
 ### TLS
 
 UI TLS is terminated on the NLB with an ACM certificate. Set `route53_enabled` and point it at a Route53 hosted zone so Terraform can create the record and validate the certificate. Without Route53 the UI listener is plain TCP on the HTTP port.
 
 ### UI Access
 
-By default security group connected to NLB allows only p2p connections for chainlink node.In order to access the UI it's required to add AWS security group ingress rule for required IP range or ranges. Check example [here](https://github.com/orionterra/terraform-aws-chainlink-node/tree/main/examples/complete_example)
+Pass operator addresses in `ingress_whitelist`. `access` picks the endpoint: `ui` is the container HTTP port, `otel_metrics` is `8888`, `otel_health` is `13133`. With Route53 enabled the NLB serves those on `443` and `8443`. The task security group sees the container port, because client IP preservation is on.
+
+The NLB subnets can always reach those ports, so health checks keep working. Set `allow_ui_from_vpc` to also allow the whole VPC CIDR to the UI. P2P stays open and is not part of the whitelist.
 
 ### Notifications
 
@@ -188,23 +192,28 @@ Create AWS Secrets Manager objects first by commenting out the section with modu
 | [aws_security_group_rule.ingress_allow_otel_health](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [aws_security_group_rule.ingress_allow_otel_metrics](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [aws_security_group_rule.ingress_allow_ui](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
+| [aws_security_group_rule.ingress_allow_ui_vpc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
+| [aws_security_group_rule.ingress_whitelist](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [aws_sns_topic.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic) | resource |
 | [random_string.alb_prefix_node_v2](https://registry.terraform.io/providers/hashicorp/random/3.4.3/docs/resources/string) | resource |
 | [random_string.alb_prefix_otel](https://registry.terraform.io/providers/hashicorp/random/3.4.3/docs/resources/string) | resource |
 | [random_string.alb_prefix_otel_metrics](https://registry.terraform.io/providers/hashicorp/random/3.4.3/docs/resources/string) | resource |
 | [random_string.alb_prefix_ui](https://registry.terraform.io/providers/hashicorp/random/3.4.3/docs/resources/string) | resource |
 | [aws_iam_policy_document.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_subnet.nlb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/subnet) | data source |
 | [external_external.parse_config](https://registry.terraform.io/providers/hashicorp/external/2.2.3/docs/data-sources/external) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_allow_ui_from_vpc"></a> [allow\_ui\_from\_vpc](#input\_allow\_ui\_from\_vpc) | Allow the VPC CIDR to reach the node UI port. NLB subnet CIDRs are always allowed so health checks keep working. | `bool` | `false` | no |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | AWS account id. Used to add alarms to dashboard | `string` | n/a | yes |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS Region (required for CloudWatch logs configuration) | `string` | n/a | yes |
 | <a name="input_config_plain_secret_arn"></a> [config\_plain\_secret\_arn](#input\_config\_plain\_secret\_arn) | ARN of the Secrets Manager secret that holds config.toml. The node task reads this secret directly. Plan reads it only to learn the ports. A separate task definition runs chainlink node validate. | `string` | n/a | yes |
 | <a name="input_env_vars"></a> [env\_vars](#input\_env\_vars) | Map of values that will be set as environment variables for Chainlink node process. By default it isn't required when using TOML configuration, but could be used to pass any environemnt variable to ECS task | `map(any)` | `{}` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name | `string` | `"nonprod"` | no |
+| <a name="input_ingress_whitelist"></a> [ingress\_whitelist](#input\_ingress\_whitelist) | Client CIDRs allowed through to the task. access selects the endpoint: ui (the container HTTP port), otel\_metrics (8888), or otel\_health (13133). With Route53 enabled the NLB serves UI on 443 and OTEL metrics on 8443. P2P is not part of this list. | <pre>list(object({<br>    cidr        = string<br>    description = string<br>    access      = list(string)<br>  }))</pre> | `[]` | no |
 | <a name="input_monitoring_enabled"></a> [monitoring\_enabled](#input\_monitoring\_enabled) | Defines whether to create CloudWatch dashboard and custom metrics or not | `bool` | `true` | no |
 | <a name="input_node_image_source"></a> [node\_image\_source](#input\_node\_image\_source) | Chainlink node docker image source. This variable can be used to rewrite default image source. Used AWS registry by default. Set to `smartcontract/chainlink` to use dockerhub registry | `string` | `"public.ecr.aws/chainlink/chainlink"` | no |
 | <a name="input_node_version"></a> [node\_version](#input\_node\_version) | Chainlink node version. The latest version could be found here: https://hub.docker.com/r/smartcontract/chainlink/tags | `string` | n/a | yes |
@@ -228,8 +237,8 @@ Create AWS Secrets Manager objects first by commenting out the section with modu
 | Name | Description |
 |------|-------------|
 | <a name="output_env_vars"></a> [env\_vars](#output\_env\_vars) | Chainlink node configuration environment variables |
-| <a name="output_nlb_endpoint"></a> [nlb\_endpoint](#output\_nlb\_endpoint) | NLB endpoint to accsess Chainlink Node UI. UI port is open only to the VPC CIDR block, in order to access the UI it's required to open SSH tunnel to any available host/bastion in the VPC. More info in Readme.md |
-| <a name="output_nlb_security_group_id"></a> [nlb\_security\_group\_id](#output\_nlb\_security\_group\_id) | ID of security group attached to NLB. It's possible to use it to configure additional sg inbound rules |
+| <a name="output_nlb_endpoint"></a> [nlb\_endpoint](#output\_nlb\_endpoint) | NLB endpoint for the Chainlink node UI. Pass operator CIDRs in ingress\_whitelist. Set allow\_ui\_from\_vpc to also allow the VPC CIDR. |
+| <a name="output_nlb_security_group_id"></a> [nlb\_security\_group\_id](#output\_nlb\_security\_group\_id) | ID of the node task security group. ingress\_whitelist adds its rules here. |
 | <a name="output_subnet_mapping"></a> [subnet\_mapping](#output\_subnet\_mapping) | A map of values required to enable failover between AZs |
 | <a name="output_validate_task_definition_family"></a> [validate\_task\_definition\_family](#output\_validate\_task\_definition\_family) | Family of the Fargate task that runs chainlink node validate. |
 <!-- END_TF_DOCS -->

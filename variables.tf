@@ -29,6 +29,35 @@ variable "vpc_cidr_block" {
   type        = string
 }
 
+variable "allow_ui_from_vpc" {
+  description = "Allow the VPC CIDR to reach the node UI port. NLB subnet CIDRs are always allowed so health checks keep working."
+  type        = bool
+  default     = false
+}
+
+variable "ingress_whitelist" {
+  description = "Client CIDRs allowed through to the task. access selects the endpoint: ui (the container HTTP port), otel_metrics (8888), or otel_health (13133). With Route53 enabled the NLB serves UI on 443 and OTEL metrics on 8443. P2P is not part of this list."
+  type = list(object({
+    cidr        = string
+    description = string
+    access      = list(string)
+  }))
+  default = []
+
+  validation {
+    condition = alltrue([
+      for entry in var.ingress_whitelist : (
+        can(cidrhost(entry.cidr, 0)) &&
+        length(entry.access) > 0 &&
+        alltrue([
+          for access in entry.access : contains(["ui", "otel_metrics", "otel_health"], access)
+        ])
+      )
+    ])
+    error_message = "Each ingress_whitelist entry needs a CIDR and access values of ui, otel_metrics, or otel_health."
+  }
+}
+
 variable "vpc_private_subnets" {
   description = "VPC private subnets where Chainlink Node should be deployed (at least 2)"
   type        = list(any)
