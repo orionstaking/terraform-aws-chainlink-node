@@ -21,7 +21,7 @@ resource "aws_lb" "this" {
 resource "random_string" "alb_prefix_ui" {
   keepers = {
     # Generate a new id each time we change ui_port
-    port = local.tls_import ? local.tls_ui_port : local.ui_port
+    port = local.ui_port
   }
 
   length  = 4
@@ -30,8 +30,6 @@ resource "random_string" "alb_prefix_ui" {
 }
 
 resource "random_string" "alb_prefix_node_v2" {
-  count = local.networking_stack == "V2" ? 1 : 0
-
   keepers = {
     # Generate a new id each time we change announce_port_v2
     port = local.announce_port_v2
@@ -66,7 +64,7 @@ resource "random_string" "alb_prefix_otel_metrics" {
 
 resource "aws_lb_target_group" "ui" {
   name                 = "chainlink-${var.environment}-ui-${random_string.alb_prefix_ui.result}"
-  port                 = local.tls_import ? local.tls_ui_port : local.ui_port
+  port                 = local.ui_port
   protocol             = "TCP"
   target_type          = "ip"
   vpc_id               = var.vpc_id
@@ -90,9 +88,7 @@ resource "aws_lb_target_group" "ui" {
 
 
 resource "aws_lb_target_group" "node_v2" {
-  count = local.networking_stack == "V2" ? 1 : 0
-
-  name                 = "chainlink-${var.environment}-nodev2-${random_string.alb_prefix_node_v2[0].result}"
+  name                 = "chainlink-${var.environment}-nodev2-${random_string.alb_prefix_node_v2.result}"
   port                 = local.announce_port_v2
   protocol             = "TCP"
   target_type          = "ip"
@@ -119,7 +115,7 @@ resource "aws_lb_listener" "ui" {
   count = var.route53_enabled ? 0 : 1
 
   load_balancer_arn = aws_lb.this.arn
-  port              = local.tls_import ? local.tls_ui_port : local.ui_port
+  port              = local.ui_port
   protocol          = "TCP"
 
   default_action {
@@ -129,15 +125,13 @@ resource "aws_lb_listener" "ui" {
 }
 
 resource "aws_lb_listener" "node_v2" {
-  count = local.networking_stack == "V2" ? 1 : 0
-
   load_balancer_arn = aws_lb.this.arn
   port              = local.announce_port_v2
   protocol          = "TCP"
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.node_v2[0].arn
+    target_group_arn = aws_lb_target_group.node_v2.arn
   }
 }
 

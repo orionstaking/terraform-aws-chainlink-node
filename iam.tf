@@ -31,26 +31,10 @@ data "aws_iam_policy_document" "this" {
       "kms:Decrypt"
     ]
     resources = [
-      aws_secretsmanager_secret.config.arn,
       aws_secretsmanager_secret.otel_config.arn,
-      var.secrets_secret_arn
+      var.config_plain_secret_arn,
+      var.secrets_plain_secret_arn,
     ]
-  }
-
-  dynamic "statement" {
-    for_each = local.tls_import ? ["tls"] : []
-
-    content {
-      effect = "Allow"
-      actions = [
-        "secretsmanager:GetSecretValue",
-        "kms:Decrypt"
-      ]
-      resources = [
-        var.tls_cert_secret_arn,
-        var.tls_key_secret_arn
-      ]
-    }
   }
 }
 

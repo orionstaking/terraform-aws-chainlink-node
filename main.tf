@@ -17,19 +17,14 @@ locals {
 data "external" "parse_config" {
   program = ["python3", "${path.module}/parse_config.py"]
   query = {
-    tf_announce_ips = join(",", local.tf_announce_ips)
-    config_toml     = var.config_toml
-    route53_enabled = var.route53_enabled
+    tf_announce_ips  = join(",", local.tf_announce_ips)
+    config_secret_id = var.config_plain_secret_arn
+    aws_region       = var.aws_region
   }
 }
 
 locals {
   ui_port          = data.external.parse_config.result.http_port
-  tls_import       = data.external.parse_config.result.tls_import
-  tls_ui_port      = data.external.parse_config.result.https_port
-  tls_cert_path    = data.external.parse_config.result.cert_path
-  tls_key_path     = data.external.parse_config.result.key_path
-  networking_stack = data.external.parse_config.result.networking_stack
   announce_port_v2 = element(split(":", element(split(",", data.external.parse_config.result.announce_addresses), 0)), 1)
   listen_port_v2   = element(split(":", data.external.parse_config.result.listen_addresses), 1)
 }
@@ -61,21 +56,18 @@ resource "aws_ecs_task_definition" "this" {
       docker_image     = "${var.node_image_source}:${var.node_version}"
       aws_region       = var.aws_region
       ui_port          = local.ui_port
-      tls_ui_port      = local.tls_ui_port
-      tls_ui_enabled   = local.tls_import
-      networking_stack = local.networking_stack
       announce_port_v2 = local.announce_port_v2
       listen_port_v2   = local.listen_port_v2
       task_cpu         = var.task_cpu
       task_memory      = var.task_memory
-      tls_cert         = var.tls_cert_secret_arn
-      tls_cert_path    = local.tls_cert_path
-      tls_key          = var.tls_key_secret_arn
-      tls_key_path     = local.tls_key_path
       env_vars         = local.env_vars
-      config           = aws_secretsmanager_secret.config.arn
-      secrets          = var.secrets_secret_arn
-      init_script      = replace(file("${path.module}/templates/init_script.sh.tpl"), "\n", " && ")
+      config           = var.config_plain_secret_arn
+      secrets          = var.secrets_plain_secret_arn
+      init_script = replace(
+        replace(trimsuffix(file("${path.module}/templates/init_script.sh.tpl"), "\n"), "\n", " && "),
+        "\"",
+        "\\\"",
+      )
       otel_init_script = replace(file("${path.module}/templates/otel_init_script.sh.tpl"), "\n", " && ")
       otel_config      = aws_secretsmanager_secret.otel_config.arn
     }
@@ -102,7 +94,7 @@ resource "aws_ecs_service" "this" {
   load_balancer {
     target_group_arn = aws_lb_target_group.ui.arn
     container_name   = "${var.project}-${var.environment}-node"
-    container_port   = local.tls_import ? local.tls_ui_port : local.ui_port
+    container_port   = local.ui_port
   }
 
   load_balancer {
@@ -117,14 +109,10 @@ resource "aws_ecs_service" "this" {
     container_port   = 8888
   }
 
-  dynamic "load_balancer" {
-    for_each = local.networking_stack == "V2" ? ["V2"] : []
-
-    content {
-      target_group_arn = aws_lb_target_group.node_v2[0].arn
-      container_name   = "${var.project}-${var.environment}-node"
-      container_port   = local.listen_port_v2
-    }
+  load_balancer {
+    target_group_arn = aws_lb_target_group.node_v2.arn
+    container_name   = "${var.project}-${var.environment}-node"
+    container_port   = local.listen_port_v2
   }
 }
 
@@ -168,8 +156,6 @@ resource "aws_security_group_rule" "ingress_allow_otel_metrics" {
 }
 
 resource "aws_security_group_rule" "ingress_allow_node_v2" {
-  count = local.networking_stack == "V2" ? 1 : 0
-
   type        = "ingress"
   from_port   = local.announce_port_v2
   to_port     = local.announce_port_v2

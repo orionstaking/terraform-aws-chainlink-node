@@ -40,7 +40,8 @@ module "chainlink_node" {
   vpc_cidr_block      = module.vpc.vpc_cidr_block
   vpc_private_subnets = module.vpc.private_subnets
 
-  secrets_secret_arn = aws_secretsmanager_secret.secrets.arn
+  config_plain_secret_arn  = aws_secretsmanager_secret.config.arn
+  secrets_plain_secret_arn = aws_secretsmanager_secret.secrets.arn
 
   # Always check latest versions
   node_version        = "1.12.0"
@@ -72,7 +73,7 @@ module "chainlink_node" {
 
 This module now supports only TOML configuration. See the [CONFIG.md](https://github.com/smartcontractkit/chainlink/blob/v1.11.0/docs/CONFIG.md) and [SECRETS.md](https://github.com/smartcontractkit/chainlink/blob/v1.11.0/docs/SECRETS.md) on GitHub to learn more.
 
-Place your config.toml in the root of terraform directory. This module will parse and verify it. You will see an error in case of invalid config.toml configuration for this terraform module. Please see an example before proceed.
+Keep config.toml in Secrets Manager and pass its ARN as `config_plain_secret_arn`. Plan reads that secret and checks the ports and announce addresses. You will see an error if the config does not match this module. Please see an example before proceed.
 
 Additionally, it's possible to pass any environment variable to Fargate container using `env_vars` terraform module variable.
 
@@ -80,11 +81,10 @@ Check example [here](https://github.com/orionterra/terraform-aws-chainlink-node/
 
 ### Secrets
 
-Module is required the following AWS Secrets Manager secrets created and set:
+Create these Secrets Manager secrets and pass their ARNs. The module does not create them and does not write their values.
 
-- Secret that contain secrets.toml (base64)
-- Secret that contain TLS_CERT (base64) (required when WebServer.TLS configuration exist in TOML config)
-- Secret that contain TLS_KEY (base64) (required when WebServer.TLS configuration exist in TOML config)
+- `config_plain_secret_arn`: config.toml
+- `secrets_plain_secret_arn`: secrets.toml
 
 Deploy order:
 
@@ -101,12 +101,15 @@ This module will check provided values and you will see an error if you specifie
 
 Check example with properly set `subnet_mapping` terraform module variable [here](https://github.com/orionterra/terraform-aws-chainlink-node/tree/main/examples/complete_example).
 
-### TLS & HTTPS Support
+### Upgrading
 
-Module support two types of configuration to secure UI connection
+P2P V1 and the imported TLS certificate inputs (`tls_cert_secret_arn`, `tls_key_secret_arn`) are removed. `moved` blocks keep the existing P2P listener, target group, security group rule, and its name suffix. The node task definition is replaced once, because the container command no longer writes a certificate and key.
 
-- AWS ACM (recommended). This option requires configured Route53 hosted zone to create records for AWS NLB and AWS ACM certificate validation. Check example [here](https://github.com/orionterra/terraform-aws-chainlink-node/tree/main/examples/complete_example).
-- Imported TLS as described [here](https://docs.chain.link/chainlink-nodes/enabling-https-connections) (deprecated).This option requires providing AWS Secrets Manager ARN's with self signed TLS key and certificate. Check example with imported TLS configuration [here](https://github.com/orionterra/terraform-aws-chainlink-node/tree/main/examples/imported_tls_example).
+`config_toml` and `secrets_secret_arn` are removed. Before applying, create Secrets Manager secrets that hold config.toml and secrets.toml and pass `config_plain_secret_arn` and `secrets_plain_secret_arn`. The values are the files themselves. The module deletes the config secret it used to create. Plan reads the config secret only to learn the ports, so that secret has to exist before the first plan. The module also creates a task definition that runs `chainlink node validate`.
+
+### TLS
+
+UI TLS is terminated on the NLB with an ACM certificate. Set `route53_enabled` and point it at a Route53 hosted zone so Terraform can create the record and validate the certificate. Without Route53 the UI listener is plain TCP on the HTTP port.
 
 ### UI Access
 
@@ -121,7 +124,6 @@ It's possible to specify your own AWS SNS topic for notifications. Otherwise, mo
 Create AWS Secrets Manager objects first by commenting out the section with module. Then set secret values and uncomment module section in the example.
 
 - [Complete example](./examples/complete_example/main.tf)
-- [Imported TLS example](./examples/imported_tls_example/main.tf)
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -162,6 +164,7 @@ Create AWS Secrets Manager objects first by commenting out the section with modu
 | [aws_ecs_cluster.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_cluster) | resource |
 | [aws_ecs_service.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_service) | resource |
 | [aws_ecs_task_definition.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_task_definition) | resource |
+| [aws_ecs_task_definition.validate](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_task_definition) | resource |
 | [aws_iam_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_role.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
@@ -177,9 +180,7 @@ Create AWS Secrets Manager objects first by commenting out the section with modu
 | [aws_lb_target_group.ui](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
 | [aws_route53_record.otel](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
 | [aws_route53_record.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
-| [aws_secretsmanager_secret.config](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
 | [aws_secretsmanager_secret.otel_config](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
-| [aws_secretsmanager_secret_version.config](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
 | [aws_secretsmanager_secret_version.otel_config](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
 | [aws_security_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_security_group_rule.egress_allow_all](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
@@ -201,7 +202,7 @@ Create AWS Secrets Manager objects first by commenting out the section with modu
 |------|-------------|------|---------|:--------:|
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | AWS account id. Used to add alarms to dashboard | `string` | n/a | yes |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS Region (required for CloudWatch logs configuration) | `string` | n/a | yes |
-| <a name="input_config_toml"></a> [config\_toml](#input\_config\_toml) | Base64 encoded Chainlink node configuration from config.toml | `string` | n/a | yes |
+| <a name="input_config_plain_secret_arn"></a> [config\_plain\_secret\_arn](#input\_config\_plain\_secret\_arn) | ARN of the Secrets Manager secret that holds config.toml. The node task reads this secret directly. Plan reads it only to learn the ports. A separate task definition runs chainlink node validate. | `string` | n/a | yes |
 | <a name="input_env_vars"></a> [env\_vars](#input\_env\_vars) | Map of values that will be set as environment variables for Chainlink node process. By default it isn't required when using TOML configuration, but could be used to pass any environemnt variable to ECS task | `map(any)` | `{}` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name | `string` | `"nonprod"` | no |
 | <a name="input_monitoring_enabled"></a> [monitoring\_enabled](#input\_monitoring\_enabled) | Defines whether to create CloudWatch dashboard and custom metrics or not | `bool` | `true` | no |
@@ -213,13 +214,11 @@ Create AWS Secrets Manager objects first by commenting out the section with modu
 | <a name="input_route53_enabled"></a> [route53\_enabled](#input\_route53\_enabled) | Defines if AWS Route53 record and AWS ACM certificate for UI access should be created. Nameservers of your zone should be added to your domain registrar before creation. It will be used to create record to NLB and verify ACM certificate using DNS | `bool` | `false` | no |
 | <a name="input_route53_subdomain_name"></a> [route53\_subdomain\_name](#input\_route53\_subdomain\_name) | Subdomain name that will be used to create Route53 record to NLB endpoint with the following format: $var.route53\_subdomain\_name.$var.route53\_domain\_name | `string` | `""` | no |
 | <a name="input_route53_zoneid"></a> [route53\_zoneid](#input\_route53\_zoneid) | Route53 hosted zone id. Nameservers of your zone should be added to your domain registrar before creation. It will be used to create record to NLB and verify ACM certificate using DNS | `string` | `""` | no |
-| <a name="input_secrets_secret_arn"></a> [secrets\_secret\_arn](#input\_secrets\_secret\_arn) | ARN of the Secrets Manager Secret in the same AWS account and Region that contains TOML secrets for Chainlink Node (base64 encoded). See https://github.com/smartcontractkit/chainlink/blob/v1.11.0/docs/SECRETS.md on github to learn more. | `string` | n/a | yes |
+| <a name="input_secrets_plain_secret_arn"></a> [secrets\_plain\_secret\_arn](#input\_secrets\_plain\_secret\_arn) | ARN of the Secrets Manager secret that holds secrets.toml. The node task reads this secret directly. See https://github.com/smartcontractkit/chainlink/blob/v1.11.0/docs/SECRETS.md | `string` | n/a | yes |
 | <a name="input_sns_topic_arn"></a> [sns\_topic\_arn](#input\_sns\_topic\_arn) | SNS topic arn for alerts. If not specified, module will create an empty topic and provide topic arn in the output. Then it will be possible to specify required notification method for this topic | `string` | `""` | no |
 | <a name="input_subnet_mapping"></a> [subnet\_mapping](#input\_subnet\_mapping) | A map of values required to enable failover between AZs. See an example in ./examples directory | `map(any)` | n/a | yes |
 | <a name="input_task_cpu"></a> [task\_cpu](#input\_task\_cpu) | Allocated CPU for chainlink node container | `number` | `2048` | no |
 | <a name="input_task_memory"></a> [task\_memory](#input\_task\_memory) | Allocated Memory for chainlink node container | `number` | `4096` | no |
-| <a name="input_tls_cert_secret_arn"></a> [tls\_cert\_secret\_arn](#input\_tls\_cert\_secret\_arn) | ARN of the Secrets Manager Secret in the same AWS account and Region that contains the TLS certificate (base64 encoded). Required when WebServer.TLS configuration exist in TOML config | `string` | `""` | no |
-| <a name="input_tls_key_secret_arn"></a> [tls\_key\_secret\_arn](#input\_tls\_key\_secret\_arn) | ARN of the Secrets Manager Secret in the same AWS account and Region that contains the TLS key (base64 encoded). Required when WebServer.TLS configuration exist in TOML config | `string` | `""` | no |
 | <a name="input_vpc_cidr_block"></a> [vpc\_cidr\_block](#input\_vpc\_cidr\_block) | The CIDR block of the VPC | `string` | n/a | yes |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | ID of the VPC where Chainlink EAs should be deployed | `string` | n/a | yes |
 | <a name="input_vpc_private_subnets"></a> [vpc\_private\_subnets](#input\_vpc\_private\_subnets) | VPC private subnets where Chainlink Node should be deployed (at least 2) | `list(any)` | n/a | yes |
@@ -232,6 +231,7 @@ Create AWS Secrets Manager objects first by commenting out the section with modu
 | <a name="output_nlb_endpoint"></a> [nlb\_endpoint](#output\_nlb\_endpoint) | NLB endpoint to accsess Chainlink Node UI. UI port is open only to the VPC CIDR block, in order to access the UI it's required to open SSH tunnel to any available host/bastion in the VPC. More info in Readme.md |
 | <a name="output_nlb_security_group_id"></a> [nlb\_security\_group\_id](#output\_nlb\_security\_group\_id) | ID of security group attached to NLB. It's possible to use it to configure additional sg inbound rules |
 | <a name="output_subnet_mapping"></a> [subnet\_mapping](#output\_subnet\_mapping) | A map of values required to enable failover between AZs |
+| <a name="output_validate_task_definition_family"></a> [validate\_task\_definition\_family](#output\_validate\_task\_definition\_family) | Family of the Fargate task that runs chainlink node validate. |
 <!-- END_TF_DOCS -->
 
 ## License
