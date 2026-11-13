@@ -33,23 +33,33 @@ module "vpc" {
   single_nat_gateway = true
 }
 
-# AWS SecretsManager objects for Chainlink Node
-resource "aws_secretsmanager_secret" "secrets" {
-  name                    = "${local.project}/${local.environment}/node/secrets"
-  description             = "TOML secrets for ${local.project}-${local.environment} in base64 format"
+# AWS Secrets Manager objects for Chainlink Node.
+# The module reads these secrets and does not write them.
+# Setting the version here stores the value in Terraform state.
+# Set it from the console instead when that matters.
+resource "aws_secretsmanager_secret" "config" {
+  name                    = "${local.project}/${local.environment}/node/config"
+  description             = "Chainlink config.toml for ${local.project}-${local.environment}"
   recovery_window_in_days = 0
 }
 
-# For security reasons secret version could be manually specified using AWS console or cli.
-# Specifying secret version (value) manually will prevent secret value from storing in terraform state.
-# As an example here the secret versino will be specified using terraform.
+resource "aws_secretsmanager_secret_version" "config" {
+  secret_id     = aws_secretsmanager_secret.config.id
+  secret_string = file("config.toml")
+}
+
+resource "aws_secretsmanager_secret" "secrets" {
+  name                    = "${local.project}/${local.environment}/node/secrets"
+  description             = "Chainlink secrets.toml for ${local.project}-${local.environment}"
+  recovery_window_in_days = 0
+}
+
 resource "aws_secretsmanager_secret_version" "secrets" {
   secret_id     = aws_secretsmanager_secret.secrets.id
-  secret_string = filebase64("secrets/secrets.toml")
+  secret_string = file("secrets/secrets.toml")
 }
-#
 
-# Public IP address for Chainlink P2P_ANNOUNCE_IP environement variable
+# Public IP address for Chainlink P2P announce addresses
 resource "aws_eip" "chainlink_p2p" {
   for_each = toset(module.vpc.azs)
 
@@ -72,12 +82,12 @@ module "chainlink_node" {
   vpc_cidr_block      = module.vpc.vpc_cidr_block
   vpc_private_subnets = module.vpc.private_subnets
 
-  secrets_secret_arn = aws_secretsmanager_secret.secrets.arn
+  config_plain_secret_arn  = aws_secretsmanager_secret.config.arn
+  secrets_plain_secret_arn = aws_secretsmanager_secret.secrets.arn
 
   node_version = "1.11.0"
   task_cpu     = 1024
   task_memory  = 2048
-  config_toml  = filebase64("config.toml")
   otel_config  = filebase64("otel_config.yaml")
   subnet_mapping = {
     (module.vpc.azs[0]) = {

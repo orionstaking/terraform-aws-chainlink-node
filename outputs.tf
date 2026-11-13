@@ -13,6 +13,11 @@ output "nlb_endpoint" {
   value       = "${aws_lb.this.dns_name}:6688"
 }
 
+output "validate_task_definition_family" {
+  description = "Family of the Fargate task that runs chainlink node validate."
+  value       = aws_ecs_task_definition.validate.family
+}
+
 output "nlb_security_group_id" {
   description = "ID of security group attached to NLB. It's possible to use it to configure additional sg inbound rules"
   value       = aws_security_group.this.id

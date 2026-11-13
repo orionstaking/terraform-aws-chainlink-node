@@ -80,32 +80,19 @@ variable "task_memory" {
   default     = 4096
 }
 
-variable "config_toml" {
-  description = "Base64 encoded Chainlink node configuration from config.toml"
-  type        = string
-}
-
 variable "otel_config" {
   description = "Base64 encoded OpenTelemetry collector configuration"
   type        = string
 }
 
-# Secrets configutation
-variable "secrets_secret_arn" {
-  description = "ARN of the Secrets Manager Secret in the same AWS account and Region that contains TOML secrets for Chainlink Node (base64 encoded). See https://github.com/smartcontractkit/chainlink/blob/v1.11.0/docs/SECRETS.md on github to learn more."
+variable "config_plain_secret_arn" {
+  description = "ARN of the Secrets Manager secret that holds config.toml. The node task reads this secret directly. Plan reads it only to learn the ports. A separate task definition runs chainlink node validate."
   type        = string
 }
 
-variable "tls_cert_secret_arn" {
-  description = "ARN of the Secrets Manager Secret in the same AWS account and Region that contains the TLS certificate (base64 encoded). Required when WebServer.TLS configuration exist in TOML config"
+variable "secrets_plain_secret_arn" {
+  description = "ARN of the Secrets Manager secret that holds secrets.toml. The node task reads this secret directly. See https://github.com/smartcontractkit/chainlink/blob/v1.11.0/docs/SECRETS.md"
   type        = string
-  default     = ""
-}
-
-variable "tls_key_secret_arn" {
-  description = "ARN of the Secrets Manager Secret in the same AWS account and Region that contains the TLS key (base64 encoded). Required when WebServer.TLS configuration exist in TOML config"
-  type        = string
-  default     = ""
 }
 
 variable "route53_enabled" {

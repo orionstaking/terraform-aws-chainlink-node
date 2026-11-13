@@ -48,6 +48,7 @@ jobs:
         with:
           terraform-version: ${{ steps.minMax.outputs.minVersion }}
           terraform-docs-version: ${{ env.TERRAFORM_DOCS_VERSION }}
+          tflint-version: v0.66.0
           install-hcledit: true
           hcledit-version: 0.2.6
           args: "--color=always --show-diff-on-failure --files ${{ matrix.directory }}/*"
@@ -58,6 +59,7 @@ jobs:
         with:
           terraform-version: ${{ steps.minMax.outputs.minVersion }}
           terraform-docs-version: ${{ env.TERRAFORM_DOCS_VERSION }}
+          tflint-version: v0.66.0
           install-hcledit: true
           hcledit-version: 0.2.6
           args: "--color=always --show-diff-on-failure --files $(ls *.tf)"
@@ -83,6 +85,7 @@ jobs:
         with:
           terraform-version: ${{ steps.minMax.outputs.maxVersion }}
           terraform-docs-version: ${{ env.TERRAFORM_DOCS_VERSION }}
+          tflint-version: v0.66.0
           install-hcledit: true
           hcledit-version: 0.2.6
           args: "--color=always --show-diff-on-failure --files ${{ matrix.directory }}/*"
@@ -94,6 +97,7 @@ jobs:
         with:
           terraform-version: ${{ steps.minMax.outputs.maxVersion }}
           terraform-docs-version: ${{ env.TERRAFORM_DOCS_VERSION }}
+          tflint-version: v0.66.0
           install-hcledit: true
           hcledit-version: 0.2.6
           args: "--color=always --show-diff-on-failure --files $(ls *.tf)"
